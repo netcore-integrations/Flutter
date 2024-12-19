@@ -1,0 +1,18 @@
+{
+  "" : {
+    "diagnostics" : "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Runner.build/Debug-iphonesimulator/SmartechNSE.build/Objects-normal/arm64/SmartechNSE-master.dia",
+    "emit-module-dependencies" : "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Runner.build/Debug-iphonesimulator/SmartechNSE.build/Objects-normal/arm64/SmartechNSE-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Runner.build/Debug-iphonesimulator/SmartechNSE.build/Objects-normal/arm64/SmartechNSE-master-emit-module.dia",
+    "swift-dependencies" : "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Runner.build/Debug-iphonesimulator/SmartechNSE.build/Objects-normal/arm64/SmartechNSE-master.swiftdeps"
+  },
+  "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/SmartechNSE/NotificationService.swift" : {
+    "const-values" : "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Runner.build/Debug-iphonesimulator/SmartechNSE.build/Objects-normal/arm64/NotificationService.swiftconstvalues",
+    "dependencies" : "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Runner.build/Debug-iphonesimulator/SmartechNSE.build/Objects-normal/arm64/NotificationService.d",
+    "diagnostics" : "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Runner.build/Debug-iphonesimulator/SmartechNSE.build/Objects-normal/arm64/NotificationService.dia",
+    "index-unit-output-path" : "/Runner.build/Debug-iphonesimulator/SmartechNSE.build/Objects-normal/arm64/NotificationService.o",
+    "llvm-bc" : "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Runner.build/Debug-iphonesimulator/SmartechNSE.build/Objects-normal/arm64/NotificationService.bc",
+    "object" : "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Runner.build/Debug-iphonesimulator/SmartechNSE.build/Objects-normal/arm64/NotificationService.o",
+    "swift-dependencies" : "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Runner.build/Debug-iphonesimulator/SmartechNSE.build/Objects-normal/arm64/NotificationService.swiftdeps",
+    "swiftmodule" : "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Runner.build/Debug-iphonesimulator/SmartechNSE.build/Objects-normal/arm64/NotificationService~partial.swiftmodule"
+  }
+}

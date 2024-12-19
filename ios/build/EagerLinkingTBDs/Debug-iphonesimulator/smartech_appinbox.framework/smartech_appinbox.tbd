@@ -1,0 +1,44 @@
+{
+  "main_library": {
+    "exported_symbols": [
+      {
+        "data": {
+          "global": [
+            "_smartech_appinboxVersionString",
+            "_smartech_appinboxVersionNumber",
+            "_kNotificationCategoryCarouselLandscape",
+            "_kNotificationCategoryCarouselPortrait",
+            "_kNotificationCategoryCarouselFallback"
+          ],
+          "objc_class": [
+            "SmartechAppinboxPlugin",
+            "PodsDummy_smartech_appinbox"
+          ]
+        }
+      }
+    ],
+    "flags": [
+      {
+        "attributes": [
+          "not_app_extension_safe"
+        ]
+      }
+    ],
+    "install_names": [
+      {
+        "name": "@rpath/smartech_appinbox.framework/smartech_appinbox"
+      }
+    ],
+    "target_info": [
+      {
+        "min_deployment": "14",
+        "target": "x86_64-ios-simulator"
+      },
+      {
+        "min_deployment": "14",
+        "target": "arm64-ios-simulator"
+      }
+    ]
+  },
+  "tapi_tbd_version": 5
+}

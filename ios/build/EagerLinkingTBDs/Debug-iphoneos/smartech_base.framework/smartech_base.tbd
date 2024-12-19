@@ -1,0 +1,37 @@
+{
+  "main_library": {
+    "exported_symbols": [
+      {
+        "data": {
+          "global": [
+            "_smartech_baseVersionString",
+            "_smartech_baseVersionNumber"
+          ],
+          "objc_class": [
+            "SmartechBasePlugin",
+            "PodsDummy_smartech_base"
+          ]
+        }
+      }
+    ],
+    "flags": [
+      {
+        "attributes": [
+          "not_app_extension_safe"
+        ]
+      }
+    ],
+    "install_names": [
+      {
+        "name": "@rpath/smartech_base.framework/smartech_base"
+      }
+    ],
+    "target_info": [
+      {
+        "min_deployment": "14",
+        "target": "arm64-ios"
+      }
+    ]
+  },
+  "tapi_tbd_version": 5
+}

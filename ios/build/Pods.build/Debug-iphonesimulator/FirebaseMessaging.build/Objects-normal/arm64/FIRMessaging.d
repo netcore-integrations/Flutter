@@ -1,0 +1,37 @@
+dependencies: \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Pods.build/Debug-iphonesimulator/FirebaseMessaging.build/module.modulemap \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/FIRMessaging.m \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/Public/FirebaseMessaging/FIRMessaging.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/Foundation.framework/Modules/module.modulemap \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Pods.build/Debug-iphonesimulator/GoogleUtilities.build/module.modulemap \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseCore/Extension/FirebaseCoreInternal.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Pods.build/Debug-iphonesimulator/FirebaseCore.build/module.modulemap \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseCore/Extension/FIRAppInternal.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseCore/Extension/FIRComponent.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseCore/Extension/FIRComponentContainer.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseCore/Extension/FIRComponentType.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseCore/Extension/FIRHeartbeatLogger.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseCore/Extension/FIRLibrary.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseCore/Extension/FIRLogger.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseInstallations/Source/Library/Private/FirebaseInstallationsInternal.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Pods.build/Debug-iphonesimulator/FirebaseInstallations.build/module.modulemap \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Interop/FIRMessagingInterop.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/FIRMessagingAnalytics.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/Interop/Analytics/Public/FIRAnalyticsInterop.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/FIRMessagingCode.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/FIRMessagingConstants.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/FIRMessagingContextManagerService.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/FIRMessagingDefines.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/FIRMessagingLogger.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/FIRMessagingPubSub.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/FIRMessagingRemoteNotificationsProxy.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/FIRMessagingRmqManager.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/FIRMessagingSyncMessageManager.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/FIRMessagingUtilities.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/FIRMessaging_Private.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/NSError+FIRMessaging.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/Token/FIRMessagingAuthService.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/Token/FIRMessagingCheckinService.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/Token/FIRMessagingTokenInfo.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/Token/FIRMessagingAPNSInfo.h \
+  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseMessaging/FirebaseMessaging/Sources/Token/FIRMessagingTokenManager.h

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "893910930509",
+    "project_id": "fabfurni",
+    "storage_bucket": "fabfurni.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:893910930509:android:37d728f0d5dbf5e1e07804",
+        "android_client_info": {
+          "package_name": "com.fabfurni"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbQoQWUvt3m8O_kSJIIuJzjWAbnDi5x_Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

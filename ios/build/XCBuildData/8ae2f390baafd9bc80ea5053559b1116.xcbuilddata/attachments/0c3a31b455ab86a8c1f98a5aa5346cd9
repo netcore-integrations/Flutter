@@ -1,0 +1,6 @@
+framework module smartech_appinbox {
+  umbrella header "smartech_appinbox-umbrella.h"
+
+  export *
+  module * { export * }
+}

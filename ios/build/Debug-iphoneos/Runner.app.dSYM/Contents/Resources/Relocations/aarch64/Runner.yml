@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Debug-iphoneos/Runner.app/Runner'
+relocations:     []
+...
