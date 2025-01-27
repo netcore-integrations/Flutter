@@ -35,9 +35,7 @@ class _landingPageState extends State<landingPage> {
         widget.data,
       ),
       StoreScreen(widget.data),
-      ProfileOneScreen(
-         // widget.data
-      ""),
+      ProfileOneScreen(widget.data),
     ];
   }
 
@@ -132,9 +130,7 @@ class _landingPageState extends State<landingPage> {
               inactiveBackgroundColor: Color(0xff949494)),
         ),
         PersistentTabConfig(
-          screen: ProfileOneScreen(
-             // widget.data
-          ""),
+          screen: ProfileOneScreen(widget.data),
           item: ItemConfig(
               icon: Icon(Icons.person),
               title: "Profile",

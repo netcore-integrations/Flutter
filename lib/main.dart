@@ -8,7 +8,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:keshav_s_application2/presentation/splash_screen/splash_screen.dart';
-import 'package:keshav_s_application2/screenwithoutlogin/HtmlPage.dart';
 import 'package:keshav_s_application2/widgets/connection_lost.dart';
 import 'package:sizer/sizer.dart';
 
@@ -32,14 +31,14 @@ void main() async {
   await FirebaseMessaging.instance.setAutoInitEnabled(true);
 
   // if(Smartech().getUserIdentity().toString().isEmpty){
-  // if (Platform.isAndroid) {
-  //   final fcmToken = await FirebaseMessaging.instance.getToken();
-  //   print(fcmToken);
-  //   Smartech().login('8920616622');
-  // }
-  // if (Platform.isIOS) {
-  //   Smartech().login('9873103345');
-  // }
+  if (Platform.isAndroid) {
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    print(fcmToken);
+    Smartech().login('8920616622');
+  }
+  if (Platform.isIOS) {
+    Smartech().login('9873103345');
+  }
 
   // }
 
@@ -72,23 +71,7 @@ void main() async {
     Logger.init(kReleaseMode ? LogMode.live : LogMode.debug);
     runApp(MyApp());
   });
-  // Smartech().onHandleDeeplink((String? smtDeeplinkSource, String? smtDeeplink, Map<dynamic, dynamic>? smtPayload, Map<dynamic, dynamic>? smtCustomPayload) async {
-  //   String deeplink=smtDeeplink!.substring(0,smtDeeplink.indexOf('?'));
-  //   print(deeplink);
-  //   if(deeplink=='/about_us_screen'){
-  //     Get.toNamed(AppRoutes.aboutUsScreen);
-  //   }
-  // });
-  MethodChannel("Apnreceived").setMethodCallHandler((handler) async {
-    if (handler.method == 'didReceivedCallback') {
-      // Do your logic here.
-      print("******************************");
-      print(handler.arguments);
-      print("******************************");
-    } else {
-      print('Unknown method from MethodChannel: ${handler.method}');
-    }
-  });
+
   Smartech().onHandleDeeplink((String? smtDeeplinkSource,
       String? smtDeeplink,
       Map<dynamic, dynamic>? smtPayload,
@@ -144,7 +127,6 @@ void main() async {
   //     'https://elink.savmoney.me/vtrack?clientid=170681&ul=BgVRBlNEBR5TX15DB154R1VASw4KWVYdTx4=&ml=BA9VSFJEA1MESw==&sl=dUolSDdrSTF9Y0tUClBWXxpFBBUIWF0BSkwLU0xQ&pp=0&c=0000&fl=X0ISRBECGk1DVkFQFkkWVURGSw8MWVhLew88UHkiXFZrI1M=&ext=');
   resolveUrl(
       'https://elink.savmoney.me/vtrack?clientid=170681&ul=BgVRBlNEBR5TX15DB154R1VASw4KWVYdTx4=&ml=BA9VSFJEA1MESw==&sl=dUolSDdrSTF9Y0tUClBWXxpFBBUIWF0BSkwLU0xQ&pp=0&c=0000&fl=X0ISRBECGk1DVkFQFkkWVURGSw8MWVhLew88UHkiXFZrI1M=&ext=');
-  // Smartech().onHandleDeeplinkAction();
   getLocation();
 }
 
@@ -166,7 +148,7 @@ Future<String> resolveUrl(String url) async {
     if (response.statusCode == 200 || response.statusCode == 302) {
       // Successfully resolved the link, return the resulting URL
       // res=response..toString();
-      return response.realUri.toString() ?? '';
+      return response.realUri.toString();
     } else {
       print('Error resolving link: ${response.statusCode}');
     }
@@ -324,7 +306,7 @@ class _MyAppState extends State<MyApp> {
           translations: AppLocalization(),
           locale: Get.deviceLocale, //for setting localization strings
           fallbackLocale: Locale('en', 'US'),
-          title: 'FabFurni by Netcore',
+          title: 'FabFurni',
           initialBinding: InitialBindings(),
           home: SplashScreen(),
           // initialRoute: AppRoutes.initialRoute,

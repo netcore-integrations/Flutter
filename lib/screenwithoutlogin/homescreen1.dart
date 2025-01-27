@@ -18,7 +18,6 @@ import 'package:keshav_s_application2/screenwithoutlogin/productlistafterclickon
 import 'package:keshav_s_application2/screenwithoutlogin/searchscreen1.dart';
 import 'package:keshav_s_application2/screenwithoutlogin/sidebarmenu.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 import 'package:carousel_slider/carousel_slider.dart' as carousel;
 
@@ -209,11 +208,8 @@ class _HomeScreen1State extends State<HomeScreen1> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async{
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      bool? isLoggedIn = prefs.getBool("isLoggedIn");
-      print(isLoggedIn);
-      Smartech().trackEvent("home_page", {"login":isLoggedIn});
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      Smartech().trackEvent("home_page", {"login":"no"});
     });
     double baseWidth = 428;
     double fem = MediaQuery.of(context).size.width / baseWidth;

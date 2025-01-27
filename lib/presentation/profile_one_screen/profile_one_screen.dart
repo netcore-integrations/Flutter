@@ -11,9 +11,7 @@ import 'package:keshav_s_application2/presentation/wallet/wallet_screen.dart';
 import 'package:keshav_s_application2/presentation/whislist_screen/whislist_screen.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:smartech_base/smartech_base.dart';
 
-import '../../screenwithoutlogin/sidebarmenu.dart';
 import '../resetPassword/resetpasswordafterlogin.dart';
 import 'controller/profile_one_controller.dart';
 import 'package:flutter/material.dart';
@@ -25,12 +23,8 @@ import 'package:keshav_s_application2/widgets/app_bar/appbar_subtitle_6.dart';
 import 'package:keshav_s_application2/widgets/app_bar/custom_app_bar.dart';
 
 class ProfileOneScreen extends StatefulWidget {
-  //Data data;
-  String mobileNumber;
-  ProfileOneScreen(
-      //this.data
-      this.mobileNumber
-      );
+  Data data;
+  ProfileOneScreen(this.data);
   @override
   State<ProfileOneScreen> createState() => _ProfileOneScreenState();
 }
@@ -80,14 +74,14 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
                             svgPath: ImageConstant.imgLocation,
                             margin: getMargin(top: 5, right: 6),
                             onTap: () {
-                              // pushScreen(
-                              //   context,
-                              //   screen: WhislistScreen(widget.data),
-                              //   withNavBar:
-                              //       false, // OPTIONAL VALUE. True by default.
-                              //   pageTransitionAnimation:
-                              //       PageTransitionAnimation.cupertino,
-                              // );
+                              pushScreen(
+                                context,
+                                screen: WhislistScreen(widget.data),
+                                withNavBar:
+                                    false, // OPTIONAL VALUE. True by default.
+                                pageTransitionAnimation:
+                                    PageTransitionAnimation.cupertino,
+                              );
                             }),
                         // AppbarSubtitle6(
                         //     text: widget.cart_count,
@@ -101,14 +95,14 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
                       child: Stack(alignment: Alignment.topRight, children: [
                         AppbarImage(
                             onTap: () {
-                              // pushScreen(
-                              //   context,
-                              //   screen: CartScreen(widget.data),
-                              //   withNavBar:
-                              //       false, // OPTIONAL VALUE. True by default.
-                              //   pageTransitionAnimation:
-                              //       PageTransitionAnimation.cupertino,
-                              // );
+                              pushScreen(
+                                context,
+                                screen: CartScreen(widget.data),
+                                withNavBar:
+                                    false, // OPTIONAL VALUE. True by default.
+                                pageTransitionAnimation:
+                                    PageTransitionAnimation.cupertino,
+                              );
                               // Navigator.of(context).push(MaterialPageRoute(
                               //   builder: (context) => CartScreen(widget.data),
                               // ));
@@ -123,10 +117,7 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
                       ]))
                 ],
                 styleType: Style.bgShadowBlack90033),
-            drawer: SidebarMenu(),
-            // SidebarMenuDraweritem(
-            //     widget.data
-            // ),
+            drawer: SidebarMenuDraweritem(widget.data),
             body: SingleChildScrollView(
               child: Container(
                   width: double.maxFinite,
@@ -169,9 +160,8 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
                                                 child: Row(children: [
                                                   Text(
                                                       'Hi ' +
-                                                          // widget.data.firstName!
-                                                          //     .capitalizeFirst!,
-                                                          widget.mobileNumber,
+                                                          widget.data.firstName!
+                                                              .capitalizeFirst!,
                                                       overflow:
                                                           TextOverflow.ellipsis,
                                                       textAlign: TextAlign.left,
@@ -183,13 +173,13 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
                                                                       0.7))),
                                                   CustomImageView(
                                                       onTap: () {
-                                                        // Navigator.of(context)
-                                                        //     .push(
-                                                        //         MaterialPageRoute(
-                                                        //   builder: (context) =>
-                                                        //       ProfileScreen(
-                                                        //           widget.data),
-                                                        // ));
+                                                        Navigator.of(context)
+                                                            .push(
+                                                                MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              ProfileScreen(
+                                                                  widget.data),
+                                                        ));
                                                       },
                                                       svgPath:
                                                           ImageConstant.imgEdit,
@@ -204,9 +194,7 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
                                                 ])),
                                             Padding(
                                                 padding: getPadding(top: 9),
-                                                child: Text(
-                                                   // widget.data.email!
-                                                    "user1@gmail.com",
+                                                child: Text(widget.data.email!,
                                                     overflow:
                                                         TextOverflow.ellipsis,
                                                     textAlign: TextAlign.left,
@@ -225,9 +213,9 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
                             ])),
                         InkWell(
                           onTap: () {
-                            // Navigator.of(context).push(MaterialPageRoute(
-                            //   builder: (context) => MyOrdersScreen(widget.data),
-                            // ));
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => MyOrdersScreen(widget.data),
+                            ));
                           },
                           child: Align(
                               alignment: Alignment.centerLeft,
@@ -284,14 +272,14 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
                         ),
                         InkWell(
                           onTap: () {
-                            // pushScreen(
-                            //   context,
-                            //   screen: WhislistScreen(widget.data),
-                            //   withNavBar:
-                            //       false, // OPTIONAL VALUE. True by default.
-                            //   pageTransitionAnimation:
-                            //       PageTransitionAnimation.cupertino,
-                            // );
+                            pushScreen(
+                              context,
+                              screen: WhislistScreen(widget.data),
+                              withNavBar:
+                                  false, // OPTIONAL VALUE. True by default.
+                              pageTransitionAnimation:
+                                  PageTransitionAnimation.cupertino,
+                            );
                           },
                           child: Align(
                               alignment: Alignment.centerLeft,
@@ -322,11 +310,11 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
                         ),
                         InkWell(
                           onTap: () {
-                            // Navigator.push(
-                            //     context,
-                            //     MaterialPageRoute(
-                            //         builder: (context) =>
-                            //             WalletScreen(widget.data)));
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        WalletScreen(widget.data)));
                           },
                           child: Align(
                               alignment: Alignment.centerLeft,
@@ -356,11 +344,11 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
                         ),
                         InkWell(
                           onTap: () {
-                            // Navigator.of(context).push(MaterialPageRoute(
-                            //   builder: (context) =>
-                            //       AddAddressScreenClickOnManageAddressScreen(
-                            //           widget.data),
-                            // ));
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) =>
+                                  AddAddressScreenClickOnManageAddressScreen(
+                                      widget.data),
+                            ));
                           },
                           child: Align(
                               alignment: Alignment.centerLeft,
@@ -391,12 +379,12 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
                         ),
                         InkWell(
                           onTap: () {
-                            // Navigator.push(
-                            //     context,
-                            //     MaterialPageRoute(
-                            //         builder: (context) => ChangePassword(
-                            //               widget.data,
-                            //             )));
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => ChangePassword(
+                                          widget.data,
+                                        )));
                           },
                           child: Align(
                               alignment: Alignment.centerLeft,
@@ -426,13 +414,13 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
                         ),
                         InkWell(
                           onTap: () {
-                            // Navigator.push(
-                            //     context,
-                            //     MaterialPageRoute(
-                            //         builder: (context) =>
-                            //             ResetPasswordAfterLogin(
-                            //               widget.data,
-                            //             )));
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        ResetPasswordAfterLogin(
+                                          widget.data,
+                                        )));
                           },
                           child: Align(
                               alignment: Alignment.centerLeft,
@@ -492,7 +480,6 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
                             final SharedPreferences prefs =
                                 await SharedPreferences.getInstance();
                             prefs.clear();
-                            Smartech().logoutAndClearUserIdentity(true);
                             Navigator.of(context, rootNavigator: true)
                                 .pushAndRemoveUntil(
                                     new MaterialPageRoute(
@@ -928,9 +915,9 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
   }
 
   onTapSearch() {
-    // Navigator.of(context).push(MaterialPageRoute(
-    //   builder: (context) => SearchScreen(widget.data, ''),
-    // ));
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => SearchScreen(widget.data, ''),
+    ));
   }
 
   onTapWishlist() {

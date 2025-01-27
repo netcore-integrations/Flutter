@@ -8,7 +8,6 @@ import 'package:rounded_loading_button_plus/rounded_loading_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartech_base/smartech_base.dart';
 
-import '../../screenwithoutlogin/landingpageafterlogin.dart';
 import 'controller/otp_controller.dart';
 import 'dart:convert';
 
@@ -92,7 +91,7 @@ class _OtpScreenState extends State<OtpScreen> {
         Map<String, dynamic> json1 = jsonDecode(pref.getString('userData')!);
         var user1 = OtpModel.fromJson(json1);
         print(user1.data);
-        Smartech().login(widget.mobileNumber);
+        Smartech().login(user1.data!.mobile!);
         print(OtpModel.fromJson(jsonObject).data!.otps!);
         Navigator.of(context).pushAndRemoveUntil<dynamic>(
           MaterialPageRoute(
@@ -150,20 +149,6 @@ class _OtpScreenState extends State<OtpScreen> {
     }
     return jsonObject;
     // return response;
-  }
-
-  @override
-  void initState() {
-    Fluttertoast.showToast(
-        msg: "Please enter 1111 as OTP to login",
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 2,
-        backgroundColor: Colors.greenAccent,
-        textColor: Colors.black,
-        fontSize: 14.0);
-
-    super.initState();
   }
 
   @override
@@ -318,31 +303,11 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                 ),
                 CustomButton(
-                  onTap: () async{
+                  onTap: () {
                     FocusManager.instance.primaryFocus!.unfocus();
                     if (_formKey.currentState!.validate() &&
                         otpController.text == widget.otp) {
-                      // postRequest();
-
-                      SharedPreferences pref = await SharedPreferences.getInstance();
-                      pref.setString("mobileNumber", widget.mobileNumber);
-                      pref.setBool("isLoggedIn", true);
-                      Smartech().login(widget.mobileNumber);
-                      Navigator.of(context).pushAndRemoveUntil<dynamic>(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                landingpageafterlogin(widget.mobileNumber),
-                          ),
-                      (route) => false,);
-
-                      Fluttertoast.showToast(
-                          msg: "Logged in Successfully",
-                          toastLength: Toast.LENGTH_LONG,
-                          gravity: ToastGravity.BOTTOM,
-                          timeInSecForIosWeb: 2,
-                          backgroundColor: Colors.greenAccent,
-                          textColor: Colors.black,
-                          fontSize: 14.0);
+                      postRequest();
                       Timer(Duration(seconds: 3), () {
                         otpController.clear();
                         _btnController.reset();
