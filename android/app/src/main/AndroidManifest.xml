@@ -78,14 +78,14 @@
             android:value="2" />
         <meta-data
             android:name="SMT_APP_ID"
-            android:value="c233670ff952e492b556c946405e5ce1" />
+            android:value="enter app id here from panel" />
         <meta-data
             android:name="HANSEL_APP_ID"
-            android:value="2LOT46SOUILN1W2VZEIVKQBZE" />
+            android:value="enter app id here from hansel panel" />
 
         <meta-data
             android:name="HANSEL_APP_KEY"
-            android:value="E2BW8TRR2S8FJHIGG7JMJKUB0N89Q89GIOSIXYXIDD31SZG9NC" />
+            android:value="enter app key here from hansel panel" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_notification"  />
