@@ -21,6 +21,8 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart' as dio;
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smartech_appinbox/smartech_appinbox.dart';
 import 'package:smartech_base/smartech_base.dart';
 
 import '../presentation/log_in_screen/log_in_screen.dart';
@@ -36,6 +38,7 @@ class _StoreScreen1State extends State<StoreScreen1> {
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   Future<stores.StoreModel>? category;
   List<stores.StoreData> categorylist = [];
+  var inbox_count;
 
   Future<stores.StoreModel> getCategory() async {
     Map data = {
@@ -91,8 +94,20 @@ class _StoreScreen1State extends State<StoreScreen1> {
         categorylist = value.data!;
       });
     });
-
+    getAppInboxMessageCount();
     super.initState();
+  }
+
+  Future getAppInboxMessageCount({String? smtAppInboxMessageType}) async {
+    await SmartechAppinbox()
+        .getAppInboxMessageCount(
+        smtAppInboxMessageType: smtAppInboxMessageType ?? "")
+        .then(
+          (value) {
+        inbox_count=int.tryParse(value.toString() ?? "");
+        print(inbox_count);
+      },
+    );
   }
 
   @override
@@ -104,7 +119,7 @@ class _StoreScreen1State extends State<StoreScreen1> {
         child: Scaffold(
             key: _scaffoldKey,
             backgroundColor: ColorConstant.whiteA700,
-            drawer: SidebarMenu(),
+            drawer: SidebarMenu(inbox_count),
             appBar: CustomAppBar(
                 height: getVerticalSize(90),
                 leadingWidth: 41,

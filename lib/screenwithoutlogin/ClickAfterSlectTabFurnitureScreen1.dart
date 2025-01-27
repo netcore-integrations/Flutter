@@ -11,7 +11,7 @@ import 'package:keshav_s_application2/screenwithoutlogin/searchscreen1.dart';
 import 'package:keshav_s_application2/screenwithoutlogin/selectproductscreen1.dart';
 import 'package:keshav_s_application2/widgets/app_bar/appbar_subtitle_2.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
-import 'package:shimmer_animation/shimmer_animation.dart';
+
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart' as fs;

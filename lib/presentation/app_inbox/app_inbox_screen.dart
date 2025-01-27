@@ -1,7 +1,6 @@
 
 import 'dart:async';
 import 'dart:developer';
-import 'dart:ffi';
 import 'package:custom_pop_up_menu/custom_pop_up_menu.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +33,7 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
   int messageLimit = 30;
   String smtInboxDataType = "all";
   String smtAppInboxMessageType = "inbox";
-  Int64? latestMessageTimeStamp;
+  // Int64? latestMessageTimeStamp;
   @override
   void initState() {
     super.initState();
@@ -163,6 +162,8 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
                 .toList())
         .then((value) {
       print("getMessageListByApiCall: " + value.toString());
+
+      
       setState(() {});
     });
   }

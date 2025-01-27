@@ -1,6 +1,6 @@
 dependencies: \
-  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Pods.build/Debug-iphoneos/FirebaseCore.build/module.modulemap \
-  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseCore/FirebaseCore/Sources/FIRFirebaseUserAgent.m \
-  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/Pods/FirebaseCore/FirebaseCore/Sources/FIRFirebaseUserAgent.h \
+  /Users/keshav.kumar/Documents/GitHub/Flutter/ios/build/Pods.build/Debug-iphoneos/FirebaseCore.build/module.modulemap \
+  /Users/keshav.kumar/Documents/GitHub/Flutter/ios/Pods/FirebaseCore/FirebaseCore/Sources/FIRFirebaseUserAgent.m \
+  /Users/keshav.kumar/Documents/GitHub/Flutter/ios/Pods/FirebaseCore/FirebaseCore/Sources/FIRFirebaseUserAgent.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/Foundation.framework/Modules/module.modulemap \
-  /Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Pods.build/Debug-iphoneos/GoogleUtilities.build/module.modulemap
+  /Users/keshav.kumar/Documents/GitHub/Flutter/ios/build/Pods.build/Debug-iphoneos/GoogleUtilities.build/module.modulemap

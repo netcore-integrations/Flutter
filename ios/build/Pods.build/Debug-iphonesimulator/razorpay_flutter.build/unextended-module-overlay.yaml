@@ -4,20 +4,20 @@
   'case-sensitive': 'false',
   'roots': [{
     'type': 'directory',
-    'name': "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Debug-iphonesimulator/razorpay_flutter/razorpay_flutter.framework/Modules"
+    'name': "/Users/keshav.kumar/Documents/GitHub/Flutter/build/ios/Debug-iphonesimulator/razorpay_flutter/razorpay_flutter.framework/Modules"
     'contents': [{
       'type': 'file',
       'name': "module.modulemap",
-      'external-contents': "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Pods.build/Debug-iphonesimulator/razorpay_flutter.build/unextended-module.modulemap",
+      'external-contents': "/Users/keshav.kumar/Documents/GitHub/Flutter/ios/build/Pods.build/Debug-iphonesimulator/razorpay_flutter.build/unextended-module.modulemap",
     }]
     },
     {
     'type': 'directory',
-    'name': "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Debug-iphonesimulator/razorpay_flutter/razorpay_flutter.framework/Headers"
+    'name': "/Users/keshav.kumar/Documents/GitHub/Flutter/build/ios/Debug-iphonesimulator/razorpay_flutter/razorpay_flutter.framework/Headers"
     'contents': [{
       'type': 'file',
       'name': "razorpay_flutter-Swift.h",
-      'external-contents': "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Pods.build/Debug-iphonesimulator/razorpay_flutter.build/unextended-interface-header.h",
+      'external-contents': "/Users/keshav.kumar/Documents/GitHub/Flutter/ios/build/Pods.build/Debug-iphonesimulator/razorpay_flutter.build/unextended-interface-header.h",
     }]
     }]
 }

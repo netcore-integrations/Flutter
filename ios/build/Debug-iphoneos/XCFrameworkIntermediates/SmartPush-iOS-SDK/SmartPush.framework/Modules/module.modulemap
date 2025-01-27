@@ -1,6 +1,0 @@
-framework module SmartPush {
-  umbrella header "SmartPush.h"
-  export *
-
-  module * { export * }
-}

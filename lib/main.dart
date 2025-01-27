@@ -7,7 +7,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:keshav_s_application2/presentation/splash_screen/splash_screen.dart';
+import 'package:keshav_s_application2/screenwithoutlogin/HtmlPage.dart';
 import 'package:keshav_s_application2/widgets/connection_lost.dart';
 import 'package:sizer/sizer.dart';
 
@@ -23,22 +25,43 @@ import 'package:location/location.dart';
 import 'dart:io' show Platform;
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 var response1;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+
+  if (!kIsWeb) {
+    await Firebase.initializeApp();
+  } else {
+    await Firebase.initializeApp(options: FirebaseOptions(
+        apiKey: "AIzaSyAyoGDHO83zRE-iNren011TmrR3Y0Xxm50",
+
+        authDomain: "fabfurni.firebaseapp.com",
+
+        projectId: "fabfurni",
+
+        storageBucket: "fabfurni.firebasestorage.app",
+
+        messagingSenderId: "893910930509",
+
+        appId: "1:893910930509:web:9e6d17e3d82499e6e07804",
+
+        measurementId: "G-4YLYZ1EXJL"
+
+    ));
+  }
   await FirebaseMessaging.instance.setAutoInitEnabled(true);
 
   // if(Smartech().getUserIdentity().toString().isEmpty){
-  if (Platform.isAndroid) {
-    final fcmToken = await FirebaseMessaging.instance.getToken();
-    print(fcmToken);
-    Smartech().login('8920616622');
-  }
-  if (Platform.isIOS) {
-    Smartech().login('9873103345');
-  }
+  // if (Platform.isAndroid) {
+  //   final fcmToken = await FirebaseMessaging.instance.getToken();
+  //   print(fcmToken);
+  //   Smartech().login('8920616622');
+  // }
+  // if (Platform.isIOS) {
+  //   Smartech().login('9873103345');
+  // }
 
   // }
 
@@ -79,7 +102,7 @@ void main() async {
     // String deeplink1=smtDeeplink!;
     // print(deeplink1);
     print('$smtDeeplink');
-    print('$smtDeeplink');
+    
 
     Future.delayed(const Duration(milliseconds: 2500), () async {
       if (smtDeeplinkSource == 'PushNotification') {
@@ -125,8 +148,9 @@ void main() async {
   });
   // handleUrl(
   //     'https://elink.savmoney.me/vtrack?clientid=170681&ul=BgVRBlNEBR5TX15DB154R1VASw4KWVYdTx4=&ml=BA9VSFJEA1MESw==&sl=dUolSDdrSTF9Y0tUClBWXxpFBBUIWF0BSkwLU0xQ&pp=0&c=0000&fl=X0ISRBECGk1DVkFQFkkWVURGSw8MWVhLew88UHkiXFZrI1M=&ext=');
-  resolveUrl(
-      'https://elink.savmoney.me/vtrack?clientid=170681&ul=BgVRBlNEBR5TX15DB154R1VASw4KWVYdTx4=&ml=BA9VSFJEA1MESw==&sl=dUolSDdrSTF9Y0tUClBWXxpFBBUIWF0BSkwLU0xQ&pp=0&c=0000&fl=X0ISRBECGk1DVkFQFkkWVURGSw8MWVhLew88UHkiXFZrI1M=&ext=');
+  // resolveUrl(
+  //     'https://elink.savmoney.me/vtrack?clientid=170681&ul=BgVRBlNEBR5TX15DB154R1VASw4KWVYdTx4=&ml=BA9VSFJEA1MESw==&sl=dUolSDdrSTF9Y0tUClBWXxpFBBUIWF0BSkwLU0xQ&pp=0&c=0000&fl=X0ISRBECGk1DVkFQFkkWVURGSw8MWVhLew88UHkiXFZrI1M=&ext=');
+  // Smartech().onHandleDeeplinkAction();
   getLocation();
 }
 
@@ -148,7 +172,7 @@ Future<String> resolveUrl(String url) async {
     if (response.statusCode == 200 || response.statusCode == 302) {
       // Successfully resolved the link, return the resulting URL
       // res=response..toString();
-      return response.realUri.toString();
+      return response.realUri.toString() ?? '';
     } else {
       print('Error resolving link: ${response.statusCode}');
     }
@@ -232,7 +256,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    initDeepLinks();
+    // initDeepLinks();
     subscription =
         Connectivity().onConnectivityChanged.listen(showConnectivitySnackBar);
     startChecking();
@@ -330,6 +354,13 @@ class _PxDeeplinkListenerImpl extends PxDeeplinkListener {
     if (url == '/about_us_screen') {
       Get.toNamed(AppRoutes.aboutUsScreen);
     }
+    if (url == '/terms_of_condition_screen') {
+      Get.toNamed(AppRoutes.termsOfConditionScreen);
+    }
+    if (url == '/log_in_screen') {
+      Get.toNamed(AppRoutes.logInScreen);
+    }
+
     print('PXDeeplink: $url');
   }
 }

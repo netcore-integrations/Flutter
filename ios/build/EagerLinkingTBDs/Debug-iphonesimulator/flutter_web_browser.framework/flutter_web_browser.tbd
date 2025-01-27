@@ -1,0 +1,41 @@
+{
+  "main_library": {
+    "exported_symbols": [
+      {
+        "data": {
+          "global": [
+            "_flutter_web_browserVersionNumber",
+            "_flutter_web_browserVersionString"
+          ],
+          "objc_class": [
+            "FlutterWebBrowserPlugin",
+            "PodsDummy_flutter_web_browser"
+          ]
+        }
+      }
+    ],
+    "flags": [
+      {
+        "attributes": [
+          "not_app_extension_safe"
+        ]
+      }
+    ],
+    "install_names": [
+      {
+        "name": "@rpath/flutter_web_browser.framework/flutter_web_browser"
+      }
+    ],
+    "target_info": [
+      {
+        "min_deployment": "14",
+        "target": "x86_64-ios-simulator"
+      },
+      {
+        "min_deployment": "14",
+        "target": "arm64-ios-simulator"
+      }
+    ]
+  },
+  "tapi_tbd_version": 5
+}

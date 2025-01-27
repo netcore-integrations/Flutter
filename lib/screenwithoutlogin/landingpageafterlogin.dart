@@ -1,6 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:keshav_s_application2/presentation/home_screen/home_screen.dart';
+import 'package:keshav_s_application2/presentation/log_in_screen/log_in_screen.dart';
+import 'package:keshav_s_application2/presentation/otp_screen/models/otp_model.dart';
+import 'package:keshav_s_application2/presentation/profile_one_screen/profile_one_screen.dart';
+import 'package:keshav_s_application2/presentation/profile_screen/profile_screen.dart';
+import 'package:keshav_s_application2/presentation/store_screen/store_screen.dart';
 import 'package:keshav_s_application2/screenwithoutlogin/profilescreenwithoutLogin.dart';
 import 'package:keshav_s_application2/presentation/cart_screen/models/cart_model.dart'
 as carts;
@@ -24,6 +30,13 @@ class _landingpageafterloginState extends State<landingpageafterlogin> {
   PersistentTabController _controller =
   PersistentTabController(initialIndex: 0);
 
+  List<Widget> _buildScreens() {
+    return [
+      HomeScreen1(),
+      StoreScreen1(),
+      ProfileOneScreen(widget.mobileNumber),
+    ];
+  }
 
   // List<PersistentBottomNavBarItem> _navBarsItems() {
   //   return [
@@ -108,7 +121,7 @@ class _landingpageafterloginState extends State<landingpageafterlogin> {
               inactiveBackgroundColor: Color(0xff949494)),
         ),
         PersistentTabConfig(
-          screen: ProfileScreenWithoutLogin(),
+          screen: ProfileOneScreen(widget.mobileNumber),
           item: ItemConfig(
               icon: Icon(Icons.person),
               title: "Profile",

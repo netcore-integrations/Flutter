@@ -14,6 +14,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart' as dio;
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'StoreScreen1.dart';
 import 'homescreen1.dart';
@@ -26,6 +27,20 @@ class landingPage1 extends StatefulWidget {
 class _landingPage1State extends State<landingPage1> {
   PersistentTabController _controller =
       PersistentTabController(initialIndex: 0);
+  var mobileNumber;
+
+  @override
+  void initState() {
+    fetchUser();
+    super.initState();
+  }
+
+  fetchUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? isLoggedIn = prefs.getBool("isLoggedIn");
+    mobileNumber = prefs.getString("mobileNumber");
+    print("$mobileNumber is hot");
+  }
 
   List<Widget> _buildScreens() {
     return [
@@ -98,7 +113,6 @@ class _landingPage1State extends State<landingPage1> {
   @override
   Widget build(BuildContext context) {
     return PersistentTabView(
-    
       onWillPop: _onWillPop,
       tabs: [
         PersistentTabConfig(
@@ -118,7 +132,9 @@ class _landingPage1State extends State<landingPage1> {
               inactiveBackgroundColor: Color(0xff949494)),
         ),
         PersistentTabConfig(
-          screen: ProfileScreenWithoutLogin(),
+          screen: mobileNumber == null
+              ? ProfileScreenWithoutLogin()
+              : ProfileOneScreen(""),
           item: ItemConfig(
               icon: Icon(Icons.person),
               title: "Profile",

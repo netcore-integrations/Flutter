@@ -4,20 +4,20 @@
   'case-sensitive': 'false',
   'roots': [{
     'type': 'directory',
-    'name': "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Debug-iphonesimulator/gtm_ios/gtm_ios.framework/Modules"
+    'name': "/Users/keshav.kumar/Documents/GitHub/Flutter/build/ios/Debug-iphonesimulator/gtm_ios/gtm_ios.framework/Modules"
     'contents': [{
       'type': 'file',
       'name': "module.modulemap",
-      'external-contents': "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Pods.build/Debug-iphonesimulator/gtm_ios.build/unextended-module.modulemap",
+      'external-contents': "/Users/keshav.kumar/Documents/GitHub/Flutter/ios/build/Pods.build/Debug-iphonesimulator/gtm_ios.build/unextended-module.modulemap",
     }]
     },
     {
     'type': 'directory',
-    'name': "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Debug-iphonesimulator/gtm_ios/gtm_ios.framework/Headers"
+    'name': "/Users/keshav.kumar/Documents/GitHub/Flutter/build/ios/Debug-iphonesimulator/gtm_ios/gtm_ios.framework/Headers"
     'contents': [{
       'type': 'file',
       'name': "gtm_ios-Swift.h",
-      'external-contents': "/Users/keshav.kumar/Documents/GitHub/FabFurni/ios/build/Pods.build/Debug-iphonesimulator/gtm_ios.build/unextended-interface-header.h",
+      'external-contents': "/Users/keshav.kumar/Documents/GitHub/Flutter/ios/build/Pods.build/Debug-iphonesimulator/gtm_ios.build/unextended-interface-header.h",
     }]
     }]
 }

@@ -1,3 +1,4 @@
+import 'package:icon_badge/icon_badge.dart';
 import 'package:keshav_s_application2/presentation/app_inbox/app_inbox_screen.dart';
 import 'package:keshav_s_application2/presentation/drawermenuitems/blogs/BlogsScreen.dart';
 import 'package:keshav_s_application2/presentation/drawermenuitems/offers/OffersScreen.dart';
@@ -8,22 +9,39 @@ import 'package:keshav_s_application2/presentation/store_screen/store_screen.dar
 import 'package:keshav_s_application2/screenwithoutlogin/BlogsScreen1.dart';
 import 'package:keshav_s_application2/screenwithoutlogin/HtmlPage.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 
 import 'package:flutter/material.dart';
 import 'package:keshav_s_application2/core/app_export.dart';
 
 import '../presentation/need_help/NeedHelp.dart';
+import 'InAppWebview.dart';
 import 'StoreScreen1.dart';
 import 'offersscreen1.dart';
 
 // ignore_for_file: must_be_immutable
 class SidebarMenu extends StatefulWidget {
+  var inboxCount;
+  SidebarMenu(this.inboxCount);
   @override
   State<SidebarMenu> createState() => _SidebarMenuState();
 }
 
 class _SidebarMenuState extends State<SidebarMenu> {
+  // var inbox_count;
+  //
+  // @override
+  // void initState() {
+  //   fetchCount();
+  //   super.initState();
+  // }
+  //
+  // fetchCount()async{
+  //   SharedPreferences prefs_inbox_count = await SharedPreferences.getInstance();
+  //   inbox_count=int.parse(prefs_inbox_count.getString('inbox_count')!);
+  //   print("inbox count :$inbox_count");
+  // }
   // SidebarMenu(this.controller);
   @override
   Widget build(BuildContext context) {
@@ -243,7 +261,46 @@ class _SidebarMenuState extends State<SidebarMenu> {
                               width: 75.w,
                               padding: getPadding(
                                   left: 18, right: 24, top: 10, bottom: 10),
-                              child: Text("App Inbox",
+                              child: Row(
+                                children: [
+                                  Text("App Inbox",
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.left,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontFamily: 'Roboto',
+                                        fontWeight: FontWeight.w400,
+                                        color: ColorConstant.black900,
+                                      )),
+                                  SizedBox(width: 10,),
+                                  IconBadge(
+                                    icon: Icon(Icons.notifications_none),
+                                    itemCount: widget.inboxCount==null?0:widget.inboxCount,
+                                    badgeColor: Colors.red,
+                                    itemColor: Colors.white,
+                                    top: 0,
+                                    right: 1,
+                                    hideZero: false,
+                                    onTap: () {
+                                      print('test');
+                                    },
+                                  ),
+
+                                ],
+                              )),
+                        ),
+
+                        InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => Inappwebview(),
+                            ));
+                          },
+                          child: Container(
+                              width: 75.w,
+                              padding: getPadding(
+                                  left: 18, right: 24, top: 10, bottom: 10),
+                              child: Text("Webview",
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: TextAlign.left,
                                   style: TextStyle(

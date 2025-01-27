@@ -2,13 +2,18 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:keshav_s_application2/landingpage.dart';
 import 'package:keshav_s_application2/presentation/log_in_screen/log_in_screen.dart';
 import 'package:keshav_s_application2/presentation/otp_screen/models/otp_model.dart';
+import 'package:keshav_s_application2/screenwithoutlogin/landingpageafterlogin.dart';
+import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smartech_appinbox/smartech_appinbox.dart';
 import 'package:smartech_base/smartech_base.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../screenwithoutlogin/homescreen1.dart';
 import '../../screenwithoutlogin/landingpage1.dart';
 import 'controller/splash_controller.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +31,8 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
   }
 
+
+
   fetchUser() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool? isLoggedIn = prefs.getBool("isLoggedIn");
@@ -34,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
       Map<String, dynamic> json1 = jsonDecode(prefs.getString('userData')!);
       var user1 = OtpModel.fromJson(json1);
       print(user1.data);
-      Smartech().setUserIdentity(user1.data!.mobile!);
+      // Smartech().setUserIdentity(user1.data!.mobile!);
       // Smartech().login(user1.data!.mobile!);
       Future.delayed(const Duration(milliseconds: 1500), () {
         Navigator.of(context).pushReplacement(MaterialPageRoute(
@@ -84,12 +91,36 @@ class _SplashScreenState extends State<SplashScreen> {
       //     Smartech().login(token!);
       //   });
       // }
-      Future.delayed(const Duration(milliseconds: 1500), () {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (context) => landingPage1(),
-        ));
-        // Get.offNamed(AppRoutes.logInScreen);
-      });
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      bool? isLoggedIn = prefs.getBool("isLoggedIn");
+      var mobileNumber = prefs.getString("mobileNumber");
+      print(mobileNumber);
+      if (mobileNumber!=null && isLoggedIn != null && isLoggedIn) {
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          kIsWeb?
+          pushWithoutNavBar(
+              context,
+              MaterialPageRoute(builder: (context) =>  HomeScreen1())
+          ):
+          Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (context) => landingpageafterlogin(mobileNumber!),
+          ));
+        });
+      }
+      else{
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          kIsWeb?
+          pushWithoutNavBar(
+              context,
+              MaterialPageRoute(builder: (context) =>  HomeScreen1())
+          ):
+          Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (context) => landingPage1(),
+          ));
+          // Get.offNamed(AppRoutes.logInScreen);
+        });
+      }
+
     }
   }
 

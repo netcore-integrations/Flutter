@@ -1,0 +1,23 @@
+{
+  'version': 0,
+  'use-external-names': 'false',
+  'case-sensitive': 'false',
+  'roots': [{
+    'type': 'directory',
+    'name': "/Users/keshav.kumar/Documents/GitHub/Flutter/build/ios/Debug-iphonesimulator/OrderedSet/OrderedSet.framework/Modules"
+    'contents': [{
+      'type': 'file',
+      'name': "module.modulemap",
+      'external-contents': "/Users/keshav.kumar/Documents/GitHub/Flutter/ios/build/Pods.build/Debug-iphonesimulator/OrderedSet.build/unextended-module.modulemap",
+    }]
+    },
+    {
+    'type': 'directory',
+    'name': "/Users/keshav.kumar/Documents/GitHub/Flutter/build/ios/Debug-iphonesimulator/OrderedSet/OrderedSet.framework/Headers"
+    'contents': [{
+      'type': 'file',
+      'name': "OrderedSet-Swift.h",
+      'external-contents': "/Users/keshav.kumar/Documents/GitHub/Flutter/ios/build/Pods.build/Debug-iphonesimulator/OrderedSet.build/unextended-interface-header.h",
+    }]
+    }]
+}

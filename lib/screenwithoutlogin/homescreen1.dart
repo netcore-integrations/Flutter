@@ -18,6 +18,7 @@ import 'package:keshav_s_application2/screenwithoutlogin/productlistafterclickon
 import 'package:keshav_s_application2/screenwithoutlogin/searchscreen1.dart';
 import 'package:keshav_s_application2/screenwithoutlogin/sidebarmenu.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 import 'package:carousel_slider/carousel_slider.dart' as carousel;
 
@@ -32,6 +33,7 @@ import 'package:keshav_s_application2/presentation/store_screen/models/StoreMode
     as stores;
 
 import 'package:dio/dio.dart' as dio;
+import 'package:smartech_appinbox/smartech_appinbox.dart';
 import 'package:smartech_base/smartech_base.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -39,6 +41,7 @@ import '../presentation/log_in_screen/log_in_screen.dart';
 import '../widgets/app_bar/appbar_title.dart';
 import 'ClickAfterSlectTabFurnitureScreen1.dart';
 import 'NewProductScreen1.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class HomeScreen1 extends StatefulWidget {
   @override
@@ -61,6 +64,7 @@ class _HomeScreen1State extends State<HomeScreen1> {
   String? twitter;
   Future<stores.StoreModel>? category;
   List<stores.StoreData> categorylist = [];
+  var inbox_count;
 
   Future<stores.StoreModel> getCategory() async {
     Map data = {
@@ -162,6 +166,7 @@ class _HomeScreen1State extends State<HomeScreen1> {
       setState(() {
         categorylist = value.data!;
       });
+
     });
     home!.then((value) {
       setState(() {
@@ -177,7 +182,7 @@ class _HomeScreen1State extends State<HomeScreen1> {
         twitter = value.links!.tweeter!;
       });
     });
-
+    getAppInboxMessageCount();
     super.initState();
   }
 
@@ -206,10 +211,25 @@ class _HomeScreen1State extends State<HomeScreen1> {
 
   int silderIndex = 0;
 
+  Future getAppInboxMessageCount({String? smtAppInboxMessageType}) async {
+    await SmartechAppinbox()
+        .getAppInboxMessageCount(
+        smtAppInboxMessageType: smtAppInboxMessageType ?? "")
+        .then(
+          (value) {
+            inbox_count=int.tryParse(value.toString() ?? "");
+        print(inbox_count);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      Smartech().trackEvent("home_page", {"login":"no"});
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async{
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      bool? isLoggedIn = prefs.getBool("isLoggedIn");
+      print(isLoggedIn);
+      Smartech().trackEvent("home_page", {"login":isLoggedIn});
     });
     double baseWidth = 428;
     double fem = MediaQuery.of(context).size.width / baseWidth;
@@ -218,10 +238,10 @@ class _HomeScreen1State extends State<HomeScreen1> {
         child: Scaffold(
           key: _scaffoldKey,
             backgroundColor: ColorConstant.purple50,
-            drawer: SidebarMenu(),
+            drawer: SidebarMenu(inbox_count),
             appBar: CustomAppBar(
                 height: getVerticalSize(90),
-                leadingWidth: 41,
+                leadingWidth: kIsWeb?getHorizontalSize(30):41,
                 leading: AppbarImage(
                     onTap: () {
                       _scaffoldKey.currentState!.openDrawer();
@@ -321,7 +341,6 @@ class _HomeScreen1State extends State<HomeScreen1> {
                 ],
                 styleType: Style.bgShadowBlack90033),
             body: RefreshIndicator(
-               key: ValueKey("anything_hsl_ignore"),
               color: Colors.purple,
               onRefresh: () async {
                 home = getdashboard();
@@ -778,7 +797,7 @@ class _HomeScreen1State extends State<HomeScreen1> {
                          // banners.length != 0
                               //?
                     Container(
-                                  //height: 100,
+                                  // height: 50.h,
                                   // width: 200.w,
                                   padding: getPadding(left: 10, right: 10),
                                   // color: Colors.black,
