@@ -2,17 +2,9 @@ import 'dart:convert';
 
 import 'package:animated_shimmer/animated_shimmer.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:keshav_s_application2/presentation/cart_screen/cart_screen.dart';
-import 'package:keshav_s_application2/presentation/click_after_slect_tab_furniture_screen/click_after_slect_tab_furniture_screen.dart';
 import 'package:keshav_s_application2/presentation/home_screen/models/HomeModel.dart'
     as homes;
-import 'package:keshav_s_application2/presentation/otp_screen/models/otp_model.dart';
-import 'package:keshav_s_application2/presentation/product_detail_screen/product_detail_screen.dart';
-import 'package:keshav_s_application2/presentation/select_product_screen/productlistafterclickionbanner.dart';
-import 'package:keshav_s_application2/presentation/sidebar_menu_draweritem/sidebar_menu_draweritem.dart';
-import 'package:keshav_s_application2/presentation/store_screen/store_screen.dart';
-import 'package:keshav_s_application2/presentation/whislist_screen/whislist_screen.dart';
+
 import 'package:keshav_s_application2/screenwithoutlogin/productdetailscreen1.dart';
 import 'package:keshav_s_application2/screenwithoutlogin/productlistafterclickonbanner1.dart';
 import 'package:keshav_s_application2/screenwithoutlogin/searchscreen1.dart';
@@ -23,10 +15,8 @@ import 'package:sizer/sizer.dart';
 import 'package:carousel_slider/carousel_slider.dart' as carousel;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg_provider/flutter_svg_provider.dart' as fs;
 import 'package:keshav_s_application2/core/app_export.dart';
 import 'package:keshav_s_application2/widgets/app_bar/appbar_image.dart';
-import 'package:keshav_s_application2/widgets/app_bar/appbar_subtitle_6.dart';
 import 'package:keshav_s_application2/widgets/app_bar/custom_app_bar.dart';
 import 'dart:convert';
 import 'package:keshav_s_application2/presentation/store_screen/models/StoreModel.dart'
@@ -35,6 +25,7 @@ import 'package:keshav_s_application2/presentation/store_screen/models/StoreMode
 import 'package:dio/dio.dart' as dio;
 import 'package:smartech_appinbox/smartech_appinbox.dart';
 import 'package:smartech_base/smartech_base.dart';
+import 'package:smartech_nudges/netcore_px.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../presentation/log_in_screen/log_in_screen.dart';
@@ -166,7 +157,6 @@ class _HomeScreen1State extends State<HomeScreen1> {
       setState(() {
         categorylist = value.data!;
       });
-
     });
     home!.then((value) {
       setState(() {
@@ -182,6 +172,7 @@ class _HomeScreen1State extends State<HomeScreen1> {
         twitter = value.links!.tweeter!;
       });
     });
+
     getAppInboxMessageCount();
     super.initState();
   }
@@ -208,16 +199,27 @@ class _HomeScreen1State extends State<HomeScreen1> {
     "Microwave",
     "Wardrobe"
   ];
+  List bannerImages = [
+    "assets/images/img_image14_215x428.png",
+    "assets/images/img_dks3bvbvsaaus9p.png",
+    "assets/images/img_image3.png",
+    "assets/images/img_image4.png",
+  ];
 
   int silderIndex = 0;
+
+  // Future featureManagement()async{
+  //   Object value = await NetcorePX.instance.
+  //   return value;
+  // }
 
   Future getAppInboxMessageCount({String? smtAppInboxMessageType}) async {
     await SmartechAppinbox()
         .getAppInboxMessageCount(
-        smtAppInboxMessageType: smtAppInboxMessageType ?? "")
+            smtAppInboxMessageType: smtAppInboxMessageType ?? "")
         .then(
-          (value) {
-            inbox_count=int.tryParse(value.toString() ?? "");
+      (value) {
+        inbox_count = int.tryParse(value.toString() ?? "");
         print(inbox_count);
       },
     );
@@ -225,23 +227,23 @@ class _HomeScreen1State extends State<HomeScreen1> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async{
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       bool? isLoggedIn = prefs.getBool("isLoggedIn");
       print(isLoggedIn);
-      Smartech().trackEvent("home_page", {"login":isLoggedIn});
+      Smartech().trackEvent("home_page", {"login": isLoggedIn});
     });
     double baseWidth = 428;
     double fem = MediaQuery.of(context).size.width / baseWidth;
     double ffem = fem * 0.97;
     return SafeArea(
         child: Scaffold(
-          key: _scaffoldKey,
+            key: _scaffoldKey,
             backgroundColor: ColorConstant.purple50,
             drawer: SidebarMenu(inbox_count),
             appBar: CustomAppBar(
                 height: getVerticalSize(90),
-                leadingWidth: kIsWeb?getHorizontalSize(30):41,
+                leadingWidth: kIsWeb ? getHorizontalSize(30) : 41,
                 leading: AppbarImage(
                     onTap: () {
                       _scaffoldKey.currentState!.openDrawer();
@@ -366,8 +368,7 @@ class _HomeScreen1State extends State<HomeScreen1> {
                 });
               },
               child: SingleChildScrollView(
-                  child: Column(
-                    children: [
+                  child: Column(children: [
                 Container(
                   // change your height based on preference
                   height: 60,
@@ -794,243 +795,240 @@ class _HomeScreen1State extends State<HomeScreen1> {
                           SizedBox(
                             height: 8,
                           ),
-                         // banners.length != 0
-                              //?
-                    Container(
-                                  // height: 50.h,
-                                  // width: 200.w,
-                                  padding: getPadding(left: 10, right: 10),
-                                  // color: Colors.black,
-                                  child: carousel.CarouselSlider.builder(
-                                      options: carousel.CarouselOptions(
-                                        //height: getVerticalSize(215),
-                                        initialPage: 0,
-                                        autoPlay: true,
-                                        viewportFraction: 1.0,
-                                        enableInfiniteScroll: true,
-                                        autoPlayCurve: Curves.fastOutSlowIn,
-                                        scrollDirection: Axis.horizontal,
-                                        onPageChanged: (index, reason) {
-                                          silderIndex = index;
-                                        },
-                                        // onScrolled: (index) {
-                                        //   controller.silderIndex.value =
-                                        //       index as int;
-                                        // }
-                                      ),
-                                      itemCount: 3,
-                                      //banners.length,
-                                      itemBuilder: (context, index, realIndex) {
-                                        // SliderItemModel model = controller
-                                        //     .productDetailModelObj
-                                        //     .value
-                                        //     .sliderItemList[index];
-                                        return GestureDetector(
-                                          onTap: () {
-                                            if (banners[index].keywordId ==
-                                                    '0' ||
-                                                banners[index].keywordId ==
-                                                    null) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(SnackBar(
-                                                      content: Text("No Data"),
-                                                      backgroundColor:
-                                                          Colors.redAccent));
-                                            } else {
-                                              Navigator.of(context)
-                                                  .push(MaterialPageRoute(
-                                                builder: (context) =>
-                                                    productlisrafterclickonbanner1(
-                                                        banners[index]
-                                                            .keywordId!,
-                                                        '',
-                                                        '',
-                                                        ''),
-                                              ));
-                                            }
-                                          },
-                                          child: Image.asset(
-                                            //banners[index].image!,
-                                            "assets/images/img_image14_215x428.png",
-                                            fit: BoxFit.cover,
-                                            width: 95.w,
-                                            alignment: Alignment(1.2, 1.2),
-                                            filterQuality: FilterQuality.high,
-                                            // loadingBuilder: (context, child,
-                                            //         loadingProgress) =>
-                                            //     (loadingProgress == null)
-                                            //         ? child
-                                            //         : AnimatedShimmer(
-                                            //             height: 206,
-                                            //             width: 100.w,
-                                            //             borderRadius:
-                                            //                 const BorderRadius
-                                            //                     .all(
-                                            //                     Radius.circular(
-                                            //                         10)),
-                                            //             delayInMilliSeconds:
-                                            //                 Duration(
-                                            //                     milliseconds:
-                                            //                         index * 5),
-                                            //           ),
-                                            // CircularProgressIndicator(
-                                            //         color: Color(0xff9BA6BF),
-                                            //         strokeWidth: 2,
-                                            //       ),
-                                            errorBuilder: (context, error,
-                                                    stackTrace) =>
-                                                Image.asset(
-                                                    "assets/images/image_not_found.png"),
-                                          ),
-                                        );
-                                        // SliderItemWidget(model);
-                                      })
-                                  // ListView.separated(
-                                  //   // set the scroll direction to horizontal
-                                  //     itemCount: banners.length,
-                                  //     scrollDirection: Axis.horizontal,
-                                  //     separatorBuilder: (context, int) {
-                                  //       return Padding(
-                                  //         padding: EdgeInsets.fromLTRB(5,0, 5, 0),
-                                  //       );
-                                  //     },
-                                  //     itemBuilder: (context, index) {
-                                  //       // return
-                                  //       //   SvgPicture.network(banners[index].image);
-                                  //       return GestureDetector(
-                                  //         onTap: (){
-                                  //           if(banners[index].keywordId=='0' || banners[index].keywordId==null){
-                                  //             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                  //                 content: Text("No Data"),
-                                  //                 backgroundColor: Colors.redAccent));
-                                  //           }else{
-                                  //             Navigator.of(context).push(MaterialPageRoute(
-                                  //               builder: (context) => productlisrafterclickonbanner1(banners[index].keywordId,'','',''),
-                                  //             ));}
-                                  //         },
-                                  //         child: Image.network(
-                                  //           banners[index].image,
-                                  //           fit: BoxFit.cover,
-                                  //           width: 95.w,
-                                  //           alignment: Alignment(1.2, 1.2),
-                                  //           filterQuality: FilterQuality.high,
-                                  //           loadingBuilder:
-                                  //               (context, child, loadingProgress) =>
-                                  //           (loadingProgress == null)
-                                  //               ? child
-                                  //               : AnimatedShimmer(
-                                  //             height: 206,
-                                  //             width: 100.w,
-                                  //             borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                  //             delayInMilliSeconds: Duration(milliseconds: index * 500),
-                                  //           ),
-                                  //           // CircularProgressIndicator(
-                                  //           //         color: Color(0xff9BA6BF),
-                                  //           //         strokeWidth: 2,
-                                  //           //       ),
-                                  //           errorBuilder: (context, error, stackTrace) =>
-                                  //               Image.asset(
-                                  //                   "assets/images/image_not_found.png"),
-                                  //         ),
-                                  //       );
-                                  //       // return CustomImageView(
-                                  //       //     onTap: (){
-                                  //       //       pushScreen(
-                                  //       //         context,
-                                  //       //         screen: StoreScreen(widget.data),
-                                  //       //         withNavBar: true, // OPTIONAL VALUE. True by default.
-                                  //       //         pageTransitionAnimation: PageTransitionAnimation.cupertino,
-                                  //       //       );
-                                  //       //     },
-                                  //       //     url:"https://fabfurni.com/assets/uploads/1682784086decore-icon_2_.svg",
-                                  //       //     // ImageConstant.imgFurnituresocialmediabanner,
-                                  //       //     // height: getVerticalSize(206),
-                                  //       //     // width: getHorizontalSize(396),
-                                  //       //     margin: getMargin(top: 13,left: 10));
-                                  //     }
-                                  //   // CategoryCard(
-                                  //   //     title: 'Furniture',
-                                  //   //     previewImageAsset: ImageConstant.imgSofa,
-                                  //   //     onTap: () {
-                                  //   //       pushScreen(
-                                  //   //         context,
-                                  //   //         screen: ClickAfterSlectTabFurnitureScreen(widget.data),
-                                  //   //         withNavBar: true, // OPTIONAL VALUE. True by default.
-                                  //   //         pageTransitionAnimation: PageTransitionAnimation.cupertino,
-                                  //   //       );
-                                  //   //       // Get.toNamed(AppRoutes.clickAfterSlectTabFurnitureScreen);
-                                  //   //     }),
-                                  //   // // space them using a sized box
-                                  //   // SizedBox(
-                                  //   //   width: 15,
-                                  //   // ),
-                                  //   // CategoryCard(
-                                  //   //     title: 'Living',
-                                  //   //     previewImageAsset: ImageConstant.imgTvstand,
-                                  //   //     onTap: () {}),
-                                  //   // SizedBox(
-                                  //   //   width: 15,
-                                  //   // ),
-                                  //   // CategoryCard(
-                                  //   //     title: 'Bedroom',
-                                  //   //     previewImageAsset: ImageConstant.imgBed,
-                                  //   //     onTap: () {}),
-                                  //   // SizedBox(
-                                  //   //   width: 15,
-                                  //   // ),
-                                  //   // CategoryCard(
-                                  //   //     title: 'Kids Room',
-                                  //   //     previewImageAsset: ImageConstant.imgBabybed,
-                                  //   //     onTap: () {}),
-                                  //   // SizedBox(
-                                  //   //   width: 15,
-                                  //   // ),
-                                  //   // CategoryCard(
-                                  //   //     title: 'Mattresses',
-                                  //   //     previewImageAsset: ImageConstant.imgMattress,
-                                  //   //     onTap: () {}),
-                                  //   // SizedBox(
-                                  //   //   width: 15,
-                                  //   // ),
-                                  //   // CategoryCard(
-                                  //   //     title: 'Furnishings',
-                                  //   //     previewImageAsset: ImageConstant.imgCurtain,
-                                  //   //     onTap: () {}),
-                                  //   // SizedBox(
-                                  //   //   width: 15,
-                                  //   // ),
-                                  //   // CategoryCard(
-                                  //   //     title: 'Decor',
-                                  //   //     previewImageAsset: ImageConstant.imgSpiderplant,
-                                  //   //     onTap: () {}),
-                                  //   // SizedBox(
-                                  //   //   width: 15,
-                                  //   // ),
-                                  //   // CategoryCard(
-                                  //   //     title: 'Lighting',
-                                  //   //     previewImageAsset: 'assets/images/vector-cH4.png',
-                                  //   //     onTap: () {}),
-                                  //   // SizedBox(
-                                  //   //   width: 15,
-                                  //   // ),
-                                  //   // CategoryCard(
-                                  //   //     title: 'Appliances',
-                                  //   //     previewImageAsset: ImageConstant.imgMicrowave,
-                                  //   //     onTap: () {}),
-                                  //   // SizedBox(
-                                  //   //   width: 15,
-                                  //   // ),
-                                  //   // CategoryCard(
-                                  //   //     title: 'Modular Furniture',
-                                  //   //     previewImageAsset: ImageConstant.imgWardrobe,
-                                  //   //     onTap: () {}),
-                                  //   // SizedBox(
-                                  //   //   width: 15,
-                                  //   // ),
-                                  //
-                                  // ),
+                          // banners.length != 0
+                          //?
+                          Container(
+                              // height: 50.h,
+                              // width: 200.w,
+                              padding: getPadding(left: 10, right: 10),
+                              // color: Colors.black,
+                              child: carousel.CarouselSlider.builder(
+                                  options: carousel.CarouselOptions(
+                                    //height: getVerticalSize(215),
+                                    initialPage: 0,
+                                    autoPlay: true,
+                                    viewportFraction: 1.0,
+                                    enableInfiniteScroll: true,
+                                    autoPlayCurve: Curves.fastOutSlowIn,
+                                    scrollDirection: Axis.horizontal,
+                                    onPageChanged: (index, reason) {
+                                      silderIndex = index;
+                                    },
+                                    // onScrolled: (index) {
+                                    //   controller.silderIndex.value =
+                                    //       index as int;
+                                    // }
                                   ),
-                             // : Container(),
+                                  itemCount: bannerImages.length,
+                                  //banners.length,
+                                  itemBuilder: (context, index, realIndex) {
+                                    // SliderItemModel model = controller
+                                    //     .productDetailModelObj
+                                    //     .value
+                                    //     .sliderItemList[index];
+                                    return GestureDetector(
+                                      onTap: () {
+                                        if (banners[index].keywordId == '0' ||
+                                            banners[index].keywordId == null) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(SnackBar(
+                                                  content: Text("No Data"),
+                                                  backgroundColor:
+                                                      Colors.redAccent));
+                                        } else {
+                                          Navigator.of(context)
+                                              .push(MaterialPageRoute(
+                                            builder: (context) =>
+                                                productlisrafterclickonbanner1(
+                                                    banners[index].keywordId!,
+                                                    '',
+                                                    '',
+                                                    ''),
+                                          ));
+                                        }
+                                      },
+                                      child: Image.asset(
+                                        //banners[index].image!,
+                                        bannerImages[index],
+                                        fit: BoxFit.fill,
+                                        width: 95.w,
+                                        alignment: Alignment(1.2, 1.2),
+                                        filterQuality: FilterQuality.high,
+                                        // loadingBuilder: (context, child,
+                                        //         loadingProgress) =>
+                                        //     (loadingProgress == null)
+                                        //         ? child
+                                        //         : AnimatedShimmer(
+                                        //             height: 206,
+                                        //             width: 100.w,
+                                        //             borderRadius:
+                                        //                 const BorderRadius
+                                        //                     .all(
+                                        //                     Radius.circular(
+                                        //                         10)),
+                                        //             delayInMilliSeconds:
+                                        //                 Duration(
+                                        //                     milliseconds:
+                                        //                         index * 5),
+                                        //           ),
+                                        // CircularProgressIndicator(
+                                        //         color: Color(0xff9BA6BF),
+                                        //         strokeWidth: 2,
+                                        //       ),
+                                        errorBuilder: (context, error,
+                                                stackTrace) =>
+                                            Image.asset(
+                                                "assets/images/image_not_found.png"),
+                                      ),
+                                    );
+                                    // SliderItemWidget(model);
+                                  })
+                              // ListView.separated(
+                              //   // set the scroll direction to horizontal
+                              //     itemCount: banners.length,
+                              //     scrollDirection: Axis.horizontal,
+                              //     separatorBuilder: (context, int) {
+                              //       return Padding(
+                              //         padding: EdgeInsets.fromLTRB(5,0, 5, 0),
+                              //       );
+                              //     },
+                              //     itemBuilder: (context, index) {
+                              //       // return
+                              //       //   SvgPicture.network(banners[index].image);
+                              //       return GestureDetector(
+                              //         onTap: (){
+                              //           if(banners[index].keywordId=='0' || banners[index].keywordId==null){
+                              //             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              //                 content: Text("No Data"),
+                              //                 backgroundColor: Colors.redAccent));
+                              //           }else{
+                              //             Navigator.of(context).push(MaterialPageRoute(
+                              //               builder: (context) => productlisrafterclickonbanner1(banners[index].keywordId,'','',''),
+                              //             ));}
+                              //         },
+                              //         child: Image.network(
+                              //           banners[index].image,
+                              //           fit: BoxFit.cover,
+                              //           width: 95.w,
+                              //           alignment: Alignment(1.2, 1.2),
+                              //           filterQuality: FilterQuality.high,
+                              //           loadingBuilder:
+                              //               (context, child, loadingProgress) =>
+                              //           (loadingProgress == null)
+                              //               ? child
+                              //               : AnimatedShimmer(
+                              //             height: 206,
+                              //             width: 100.w,
+                              //             borderRadius: const BorderRadius.all(Radius.circular(10)),
+                              //             delayInMilliSeconds: Duration(milliseconds: index * 500),
+                              //           ),
+                              //           // CircularProgressIndicator(
+                              //           //         color: Color(0xff9BA6BF),
+                              //           //         strokeWidth: 2,
+                              //           //       ),
+                              //           errorBuilder: (context, error, stackTrace) =>
+                              //               Image.asset(
+                              //                   "assets/images/image_not_found.png"),
+                              //         ),
+                              //       );
+                              //       // return CustomImageView(
+                              //       //     onTap: (){
+                              //       //       pushScreen(
+                              //       //         context,
+                              //       //         screen: StoreScreen(widget.data),
+                              //       //         withNavBar: true, // OPTIONAL VALUE. True by default.
+                              //       //         pageTransitionAnimation: PageTransitionAnimation.cupertino,
+                              //       //       );
+                              //       //     },
+                              //       //     url:"https://fabfurni.com/assets/uploads/1682784086decore-icon_2_.svg",
+                              //       //     // ImageConstant.imgFurnituresocialmediabanner,
+                              //       //     // height: getVerticalSize(206),
+                              //       //     // width: getHorizontalSize(396),
+                              //       //     margin: getMargin(top: 13,left: 10));
+                              //     }
+                              //   // CategoryCard(
+                              //   //     title: 'Furniture',
+                              //   //     previewImageAsset: ImageConstant.imgSofa,
+                              //   //     onTap: () {
+                              //   //       pushScreen(
+                              //   //         context,
+                              //   //         screen: ClickAfterSlectTabFurnitureScreen(widget.data),
+                              //   //         withNavBar: true, // OPTIONAL VALUE. True by default.
+                              //   //         pageTransitionAnimation: PageTransitionAnimation.cupertino,
+                              //   //       );
+                              //   //       // Get.toNamed(AppRoutes.clickAfterSlectTabFurnitureScreen);
+                              //   //     }),
+                              //   // // space them using a sized box
+                              //   // SizedBox(
+                              //   //   width: 15,
+                              //   // ),
+                              //   // CategoryCard(
+                              //   //     title: 'Living',
+                              //   //     previewImageAsset: ImageConstant.imgTvstand,
+                              //   //     onTap: () {}),
+                              //   // SizedBox(
+                              //   //   width: 15,
+                              //   // ),
+                              //   // CategoryCard(
+                              //   //     title: 'Bedroom',
+                              //   //     previewImageAsset: ImageConstant.imgBed,
+                              //   //     onTap: () {}),
+                              //   // SizedBox(
+                              //   //   width: 15,
+                              //   // ),
+                              //   // CategoryCard(
+                              //   //     title: 'Kids Room',
+                              //   //     previewImageAsset: ImageConstant.imgBabybed,
+                              //   //     onTap: () {}),
+                              //   // SizedBox(
+                              //   //   width: 15,
+                              //   // ),
+                              //   // CategoryCard(
+                              //   //     title: 'Mattresses',
+                              //   //     previewImageAsset: ImageConstant.imgMattress,
+                              //   //     onTap: () {}),
+                              //   // SizedBox(
+                              //   //   width: 15,
+                              //   // ),
+                              //   // CategoryCard(
+                              //   //     title: 'Furnishings',
+                              //   //     previewImageAsset: ImageConstant.imgCurtain,
+                              //   //     onTap: () {}),
+                              //   // SizedBox(
+                              //   //   width: 15,
+                              //   // ),
+                              //   // CategoryCard(
+                              //   //     title: 'Decor',
+                              //   //     previewImageAsset: ImageConstant.imgSpiderplant,
+                              //   //     onTap: () {}),
+                              //   // SizedBox(
+                              //   //   width: 15,
+                              //   // ),
+                              //   // CategoryCard(
+                              //   //     title: 'Lighting',
+                              //   //     previewImageAsset: 'assets/images/vector-cH4.png',
+                              //   //     onTap: () {}),
+                              //   // SizedBox(
+                              //   //   width: 15,
+                              //   // ),
+                              //   // CategoryCard(
+                              //   //     title: 'Appliances',
+                              //   //     previewImageAsset: ImageConstant.imgMicrowave,
+                              //   //     onTap: () {}),
+                              //   // SizedBox(
+                              //   //   width: 15,
+                              //   // ),
+                              //   // CategoryCard(
+                              //   //     title: 'Modular Furniture',
+                              //   //     previewImageAsset: ImageConstant.imgWardrobe,
+                              //   //     onTap: () {}),
+                              //   // SizedBox(
+                              //   //   width: 15,
+                              //   // ),
+                              //
+                              // ),
+                              ),
+                          // : Container(),
                           SizedBox(
                             height: 2.h,
                           ),
@@ -1041,8 +1039,8 @@ class _HomeScreen1State extends State<HomeScreen1> {
                             padding: getPadding(left: 10, right: 10),
                             child: ListView.separated(
                                 // set the scroll direction to horizontal
-                                itemCount:3,
-                               // bannersresportrait.length,
+                                itemCount: 3,
+                                // bannersresportrait.length,
                                 scrollDirection: Axis.horizontal,
                                 separatorBuilder: (context, int) {
                                   return Padding(

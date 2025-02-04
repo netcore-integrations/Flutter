@@ -10,7 +10,7 @@ dependencies: \
   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/include/ObjectiveC.modulemap \
   /Users/keshav.kumar/.pub-cache/hosted/pub.dev/flutter_inappwebview_ios-1.1.2/ios/Classes/InAppWebViewFlutterPlugin.h \
   /Users/keshav.kumar/Documents/flutter/bin/cache/artifacts/engine/ios/Flutter.xcframework/ios-arm64/Flutter.framework/Modules/module.modulemap \
-  /Users/keshav.kumar/Documents/GitHub/Flutter/build/ios/Debug-iphoneos/flutter_inappwebview_ios/flutter_inappwebview_ios.framework/Headers/flutter_inappwebview_ios-Swift.h \
+  /Users/keshav.kumar/Documents/GitHub/Flutter/ios/build/Debug-iphoneos/flutter_inappwebview_ios/flutter_inappwebview_ios.framework/Headers/flutter_inappwebview_ios-Swift.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Cryptexes/OS/System/Library/Frameworks/AuthenticationServices.framework/Modules/module.modulemap \
   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Cryptexes/OS/System/Library/Frameworks/SafariServices.framework/Modules/module.modulemap \
   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Modules/module.modulemap

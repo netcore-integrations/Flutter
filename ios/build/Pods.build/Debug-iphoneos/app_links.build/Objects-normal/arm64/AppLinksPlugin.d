@@ -9,4 +9,4 @@ dependencies: \
   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/include/ObjectiveC.modulemap \
   /Users/keshav.kumar/.pub-cache/hosted/pub.dev/app_links-6.3.2/ios/Classes/AppLinksPlugin.h \
   /Users/keshav.kumar/Documents/flutter/bin/cache/artifacts/engine/ios/Flutter.xcframework/ios-arm64/Flutter.framework/Modules/module.modulemap \
-  /Users/keshav.kumar/Documents/GitHub/Flutter/build/ios/Debug-iphoneos/app_links/app_links.framework/Headers/app_links-Swift.h
+  /Users/keshav.kumar/Documents/GitHub/Flutter/ios/build/Debug-iphoneos/app_links/app_links.framework/Headers/app_links-Swift.h

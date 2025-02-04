@@ -9,5 +9,5 @@ dependencies: \
   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/include/ObjectiveC.modulemap \
   /Users/keshav.kumar/.pub-cache/hosted/pub.dev/razorpay_flutter-1.3.7/ios/Classes/RazorpayFlutterPlugin.h \
   /Users/keshav.kumar/Documents/flutter/bin/cache/artifacts/engine/ios/Flutter.xcframework/ios-arm64/Flutter.framework/Modules/module.modulemap \
-  /Users/keshav.kumar/Documents/GitHub/Flutter/build/ios/Debug-iphoneos/razorpay_flutter/razorpay_flutter.framework/Headers/razorpay_flutter-Swift.h \
-  /Users/keshav.kumar/Documents/GitHub/Flutter/build/ios/Debug-iphoneos/XCFrameworkIntermediates/razorpay-pod/Razorpay.framework/Modules/module.modulemap
+  /Users/keshav.kumar/Documents/GitHub/Flutter/ios/build/Debug-iphoneos/razorpay_flutter/razorpay_flutter.framework/Headers/razorpay_flutter-Swift.h \
+  /Users/keshav.kumar/Documents/GitHub/Flutter/ios/build/Debug-iphoneos/XCFrameworkIntermediates/razorpay-pod/Razorpay.framework/Modules/module.modulemap

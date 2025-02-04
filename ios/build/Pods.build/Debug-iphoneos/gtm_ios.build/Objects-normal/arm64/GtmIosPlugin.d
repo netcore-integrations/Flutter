@@ -9,4 +9,4 @@ dependencies: \
   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/include/ObjectiveC.modulemap \
   /Users/keshav.kumar/.pub-cache/hosted/pub.dev/gtm_ios-0.1.1/ios/Classes/GtmIosPlugin.h \
   /Users/keshav.kumar/Documents/flutter/bin/cache/artifacts/engine/ios/Flutter.xcframework/ios-arm64/Flutter.framework/Modules/module.modulemap \
-  /Users/keshav.kumar/Documents/GitHub/Flutter/build/ios/Debug-iphoneos/gtm_ios/gtm_ios.framework/Headers/gtm_ios-Swift.h
+  /Users/keshav.kumar/Documents/GitHub/Flutter/ios/build/Debug-iphoneos/gtm_ios/gtm_ios.framework/Headers/gtm_ios-Swift.h
