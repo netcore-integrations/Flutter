@@ -27,7 +27,6 @@ dependencies:
   flutter_svg_provider: ^1.0.3
   carousel_slider: ^5.0.0
   smooth_page_indicator: ^1.0.0+2
-  intl: ^0.18.1
   webview_flutter: ^4.2.2
   #  url_launcher: ^6.1.11
   persistent_bottom_nav_bar_v2: ^5.3.1
@@ -39,10 +38,10 @@ dependencies:
   rounded_loading_button_plus: ^3.0.1
   firebase_core:
   firebase_messaging: ^15.1.2
-  smartech_base: ^3.5.1
-  smartech_push: ^3.5.3
-  smartech_nudges: ^1.1.7
-  smartech_appinbox: ^3.5.3
+  smartech_base:
+  smartech_push:
+  smartech_nudges:
+  smartech_appinbox:
   video_player: ^2.6.1
   chewie: ^1.9.0
   custom_pop_up_menu: ^1.2.4
@@ -60,12 +59,16 @@ dependencies:
   file_utils:
   flutter_downloader:
   icon_badge: ^1.0.0
+  easy_localization: ^3.0.7+1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons:
   android_notification_icons: ^0.0.1
+
+dependency_overrides:
+  intl: ^0.20.2
 
 flutter_icons:
   android: true

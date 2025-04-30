@@ -1,6 +1,0 @@
-framework module smartech_push {
-  umbrella header "smartech_push-umbrella.h"
-
-  export *
-  module * { export * }
-}

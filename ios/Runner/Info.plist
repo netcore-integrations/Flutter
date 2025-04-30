@@ -60,9 +60,9 @@
 	<key>HanselKeys</key>
 	<dict>
 		<key>HanselAppId</key>
-		<string>enter app id here from hansel panel</string>
+		<string>UJMDZOCJJF92T72LR3GUOVZ4F</string>
 		<key>HanselAppKey</key>
-		<string>enter app key here from hansel panel</string>
+		<string>WRAUGKWQFE620ERVV21NCU3PDM0B31UYL9GYOEDCCNOPWYZ11Q</string>
 	</dict>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
@@ -86,7 +86,7 @@
 		<key>SmartechAppGroup</key>
 		<string>group.com.netcore.SmartechApp</string>
 		<key>SmartechAppId</key>
-		<string>enter app id here from panel</string>
+		<string>cdd5abdf5d9441b21b0f9e6223a4ed7a</string>
 		<key>SmartechAutoFetchLocation</key>
 		<true/>
 		<key>SmartechUseAdvId</key>

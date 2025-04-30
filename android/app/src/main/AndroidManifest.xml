@@ -56,20 +56,20 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.VIEW" />-->
-<!--                <category android:name="android.intent.category.DEFAULT" />-->
-<!--                <category android:name="android.intent.category.BROWSABLE" />-->
-<!--                <data android:scheme="fabfurni"-->
-<!--                    android:host="smartech_sdk_td" />-->
-<!--            </intent-filter>-->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="nintyninepronudges" />
+                <data android:scheme="fabfurni"
+                    android:host="smartech_sdk_td" />
             </intent-filter>
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.VIEW" />-->
+
+<!--                <category android:name="android.intent.category.DEFAULT" />-->
+<!--                <category android:name="android.intent.category.BROWSABLE" />-->
+<!--                <data android:scheme="nintyninepronudges" />-->
+<!--            </intent-filter>-->
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
@@ -78,14 +78,14 @@
             android:value="2" />
         <meta-data
             android:name="SMT_APP_ID"
-            android:value="enter app id here from panel" />
+            android:value="c233670ff952e492b556c946405e5ce1" />
         <meta-data
             android:name="HANSEL_APP_ID"
-            android:value="enter app id here from hansel panel" />
+            android:value="2LOT46SOUILN1W2VZEIVKQBZE" />
 
         <meta-data
             android:name="HANSEL_APP_KEY"
-            android:value="enter app key here from hansel panel" />
+            android:value="E2BW8TRR2S8FJHIGG7JMJKUB0N89Q89GIOSIXYXIDD31SZG9NC" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_notification"  />

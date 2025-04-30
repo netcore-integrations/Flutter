@@ -1,6 +1,0 @@
-framework module smartech_nudges {
-  umbrella header "smartech_nudges-umbrella.h"
-
-  export *
-  module * { export * }
-}

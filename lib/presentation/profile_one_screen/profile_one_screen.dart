@@ -42,7 +42,7 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
 
   @override
   void initState() {
-    getAppInboxMessageCount();
+    getAppInboxMessageCount(smtAppInboxMessageType: "read");
     super.initState();
   }
 
@@ -53,7 +53,7 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
         .then(
           (value) {
         inbox_count=int.tryParse(value.toString() ?? "");
-        print(inbox_count);
+        print("inbox_count: "+inbox_count);
       },
     );
   }

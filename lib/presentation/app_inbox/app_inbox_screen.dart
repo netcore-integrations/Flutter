@@ -26,7 +26,9 @@ class SMTAppInboxScreen extends StatefulWidget {
 class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
   List<MessageCategory> categoryList = [];
   List<SMTAppInboxMessages> inboxList = [];
+  List<SMTAppInboxMessages> newinboxList = [];
   bool isDataLoading = true;
+  var inbox_count;
 
   var appBarHeight = AppBar().preferredSize.height;
   CustomPopupMenuController _controller = CustomPopupMenuController();
@@ -116,6 +118,20 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
         .then((value) {
       if (value != null) {
         inboxList.addAll(value);
+        for (int i = 0; i < inboxList.length; i++) {
+          String status = inboxList[i].smtPayload!.status.toLowerCase();
+          print(status);
+          //this one for unread messages
+          if(status=='delivered' || status =='sent'){
+            newinboxList.add(inboxList[i]);
+          }
+          //this one for read messages
+          if (status == 'viewed' || status == 'clicked') {
+            newinboxList.add(inboxList[i]);
+            print("new message: " + newinboxList[i].smtPayload!.status);
+            // print("new message: " + inboxList[i].smtPayload!.status);
+          }
+        }
       }
       // log(inboxList.toString());
       setState(() {});
@@ -138,13 +154,15 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
   getMessagesList() async {
     // inboxList = [];
     await SmartechAppinbox().getAppInboxMessages().then((value) {
-      // log(value.toString());
+      // log("*****************");
+      // log(value!.first.smtPayload!.status.toString());
+      // log("*****************");
       // if (value != null) {
       //   inboxList.addAll(value);
       // }
       // setState(() {});
       // log(inboxList.toString());
-      print(value);
+      // print(value);
     });
   }
 
@@ -171,10 +189,12 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
   Future getAppInboxMessageCount({String? smtAppInboxMessageType}) async {
     await SmartechAppinbox()
         .getAppInboxMessageCount(
-            smtAppInboxMessageType: smtAppInboxMessageType ?? "")
+            smtAppInboxMessageType: smtAppInboxMessageType ?? "unread")
         .then(
       (value) {
-        print(value.toString());
+        // inbox_count=int.tryParse(value.toString() ?? "");
+        // print("inbox_count: "+inbox_count);
+        print("************"+value.toString());
       },
     );
   }
@@ -200,7 +220,7 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
-        actions: inboxList.length > 0
+        actions: newinboxList.length > 0
             ? [
                 CustomPopupMenu(
                   child: Container(
@@ -240,7 +260,7 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
           Expanded(
               child: Stack(
             children: [
-              if (!isDataLoading && inboxList.isEmpty)
+              if (!isDataLoading && newinboxList.isEmpty)
                 Center(
                     child: Text(
                   "There are no notifications for you.",
@@ -253,9 +273,10 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
                       await pullToRefreshApiCall();
                     },
                     child: ListView.builder(
-                      itemCount: inboxList.length,
+                      itemCount: newinboxList.length,
                       itemBuilder: (BuildContext context, int index) {
-                        switch (inboxList[index].smtPayload!.type) {
+                        print("New Length: "+ newinboxList.length.toString());
+                        switch (newinboxList[index].smtPayload!.type) {
                           // ******* Image type Notifications ******* \\
                           case SMTNotificationType.image:
                             return VisibilityDetector(
@@ -265,22 +286,22 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
                                     info.visibleFraction * 100;
                                 // log('Widget ${inboxList[index].trid} is ${visiblePercentage}% visible');
                                 if (visiblePercentage == 100 &&
-                                    inboxList[index]
+                                    newinboxList[index]
                                             .smtPayload!
                                             .status
                                             .toLowerCase() !=
                                         "viewed") {
                                   markMessageAsViewed(
-                                      inboxList[index].smtPayload!.trid);
+                                      newinboxList[index].smtPayload!.trid);
                                   return;
                                 }
                               },
                               child: Dismissible(
-                                key: Key(inboxList[index].smtPayload!.trid),
+                                key: Key(newinboxList[index].smtPayload!.trid),
                                 onDismissed: (direction) async {
                                   await markMessageAsDismissed(
-                                      inboxList[index].smtPayload!.trid);
-                                  await inboxList.removeAt(index);
+                                      newinboxList[index].smtPayload!.trid);
+                                  await newinboxList.removeAt(index);
                                   await getCategoryList();
                                   setState(() {});
                                 },
@@ -296,11 +317,11 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
                                 child: InkWell(
                                   onTap: () {
                                     markMessageAsClicked(
-                                        inboxList[index].smtPayload!.deeplink,
-                                        inboxList[index].smtPayload!.trid);
+                                        newinboxList[index].smtPayload!.deeplink,
+                                        newinboxList[index].smtPayload!.trid);
                                   },
                                   child: SMTImageNotificationView(
-                                    inbox: inboxList[index].smtPayload!,
+                                    inbox: newinboxList[index].smtPayload!,
                                   ),
                                 ),
                               ),

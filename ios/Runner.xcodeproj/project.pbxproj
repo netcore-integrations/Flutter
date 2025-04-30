@@ -20,6 +20,7 @@
 		E127B7AA2BB3E8B300354839 /* NotificationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E127B7A92BB3E8B300354839 /* NotificationViewController.swift */; };
 		E127B7AD2BB3E8B300354839 /* Base in Resources */ = {isa = PBXBuildFile; fileRef = E127B7AC2BB3E8B300354839 /* Base */; };
 		E127B7B12BB3E8B300354839 /* SmartechNCE.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E127B7A52BB3E8B300354839 /* SmartechNCE.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		E13070702D76ECF200BD7CF2 /* test.wav in Resources */ = {isa = PBXBuildFile; fileRef = E130706F2D76ECF200BD7CF2 /* test.wav */; };
 		E1339E692BB3F72000806261 /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E1339E682BB3F72000806261 /* Media.xcassets */; };
 		E15026DA2BC9002900A21E70 /* container in Resources */ = {isa = PBXBuildFile; fileRef = E15026D92BC9002900A21E70 /* container */; };
 		E170D63A2CDC8A0100B0F055 /* SmartechNSE.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E19AFB5A2C215F2F00DF0F17 /* SmartechNSE.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -105,6 +106,7 @@
 		E127B7AC2BB3E8B300354839 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
 		E127B7AE2BB3E8B300354839 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E127B7B62BB3F5FC00354839 /* SmartechNCE.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SmartechNCE.entitlements; sourceTree = "<group>"; };
+		E130706F2D76ECF200BD7CF2 /* test.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = test.wav; sourceTree = "<group>"; };
 		E1339E682BB3F72000806261 /* Media.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Media.xcassets; sourceTree = "<group>"; };
 		E1456CF22B905EB400B97219 /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E15026D92BC9002900A21E70 /* container */ = {isa = PBXFileReference; lastKnownFileType = folder; path = container; sourceTree = "<group>"; };
@@ -199,6 +201,7 @@
 		97C146E51CF9000F007C117D = {
 			isa = PBXGroup;
 			children = (
+				E130706F2D76ECF200BD7CF2 /* test.wav */,
 				E1E7F9F52C87282700059C28 /* GoogleService-Info.plist */,
 				E15026D92BC9002900A21E70 /* container */,
 				E19BA77A2B8F165000C5E9AE /* SmartechConfig.plist */,
@@ -368,6 +371,7 @@
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				E19BA77B2B8F165100C5E9AE /* SmartechConfig.plist in Resources */,
 				E15026DA2BC9002900A21E70 /* container in Resources */,
+				E13070702D76ECF200BD7CF2 /* test.wav in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 				E1E7F9F62C87282700059C28 /* GoogleService-Info.plist in Resources */,
