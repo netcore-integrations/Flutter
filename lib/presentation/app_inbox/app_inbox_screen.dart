@@ -35,10 +35,13 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
   int messageLimit = 30;
   String smtInboxDataType = "all";
   String smtAppInboxMessageType = "inbox";
+
+  final ScrollController _scrollController = ScrollController();
   // Int64? latestMessageTimeStamp;
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_loadMoreItems);
     initialApiCall();
     getMessagesList();
     Timer(Duration(seconds: 2), () {
@@ -50,7 +53,17 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
   @override
   void dispose() {
     _controller.hideMenu();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _loadMoreItems() {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
+      setState(() {
+        // _items.addAll(List.generate(20, (index) => 'Item ${_items.length}'));
+      });
+    }
   }
 
   Future initialApiCall() async {
