@@ -17,9 +17,7 @@ import Firebase
     
     private var flutterMethodChannel: FlutterMethodChannel?
     
-    override func application(
-        _ application: UIApplication,
-        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    override func application(_ application: UIApplication,didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
     
         print(launchOptions as Any)
@@ -33,9 +31,7 @@ import Firebase
         Smartech.sharedInstance().trackAppInstallUpdateBySmartech()
         onClick()
 //        Hansel.registerHanselActionListener(action: String, listener: any HanselActionListener)
-        return super.application(application,
-                                 didFinishLaunchingWithOptions: launchOptions)
-        //      return true
+        return super.application(application,didFinishLaunchingWithOptions: launchOptions)
     }
     
     override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
@@ -58,15 +54,6 @@ import Firebase
     override func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         // MARK: Adding the delay of 5ms in didReceive response class will give the pn_clicked event in Terminated state also. Replace existing code with the below lines.
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Double(0.5 * Double(NSEC_PER_SEC)) / Double(NSEC_PER_SEC), execute: {
-//            self.flutterMethodChannel = FlutterMethodChannel(
-//                        name: "com.netcore.SmartechApp",
-//                        binaryMessenger: response as! FlutterBinaryMessenger 
-//                    )
-//            self.flutterMethodChannel?.invokeMethod(
-//                        "didReceivedCallback",
-//                        arguments: response
-//                    )
-//            print(response)
                     SmartPush.sharedInstance().didReceive(response)
                     completionHandler()
                 })
@@ -74,7 +61,6 @@ import Firebase
     
     func handleDeeplinkAction(withURLString deeplinkURLString: String, andNotificationPayload notificationPayload: [AnyHashable : Any]?) {
         
-//    fabfurni://productPage//, http, https
         NSLog("SMTL deeplink Native---> \(deeplinkURLString)")
    
         SmartechBasePlugin.handleDeeplinkAction(deeplinkURLString, andCustomPayload: notificationPayload)

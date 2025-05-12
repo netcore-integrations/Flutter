@@ -129,23 +129,23 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
                     .toList() ??
                 [])
         .then((value) {
-      if (value != null) {
-        inboxList.addAll(value);
-        for (int i = 0; i < inboxList.length; i++) {
-          String status = inboxList[i].smtPayload!.status.toLowerCase();
-          print(status);
-          //this one for unread messages
-          if(status=='delivered' || status =='sent'){
-            newinboxList.add(inboxList[i]);
-          }
-          //this one for read messages
-          if (status == 'viewed' || status == 'clicked') {
-            newinboxList.add(inboxList[i]);
-            print("new message: " + newinboxList[i].smtPayload!.status);
-            // print("new message: " + inboxList[i].smtPayload!.status);
-          }
-        }
-      }
+      // if (value != null) {
+      //   inboxList.addAll(value);
+      //   for (int i = 0; i < inboxList.length; i++) {
+      //     String status = inboxList[i].smtPayload!.status.toLowerCase();
+      //     print(status);
+      //     //this one for unread messages
+      //     if(status=='delivered' || status =='sent'){
+      //       newinboxList.add(inboxList[i]);
+      //     }
+      //     //this one for read messages
+      //     if (status == 'viewed' || status == 'clicked') {
+      //       newinboxList.add(inboxList[i]);
+      //       print("new message: " + newinboxList[i].smtPayload!.status);
+      //       // print("new message: " + inboxList[i].smtPayload!.status);
+      //     }
+      //   }
+      // }
       // log(inboxList.toString());
       setState(() {});
     });
@@ -167,15 +167,15 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
   getMessagesList() async {
     // inboxList = [];
     await SmartechAppinbox().getAppInboxMessages().then((value) {
-      // log("*****************");
-      // log(value!.first.smtPayload!.status.toString());
-      // log("*****************");
-      // if (value != null) {
-      //   inboxList.addAll(value);
-      // }
-      // setState(() {});
-      // log(inboxList.toString());
-      // print(value);
+      log("*****************");
+      log(value!.first.smtPayload!.status.toString());
+      log("*****************");
+      if (value != null) {
+        inboxList.addAll(value);
+      }
+      setState(() {});
+      log(inboxList.toString());
+      print(value);
     });
   }
 
