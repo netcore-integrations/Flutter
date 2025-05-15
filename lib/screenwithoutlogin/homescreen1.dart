@@ -26,6 +26,7 @@ import 'package:dio/dio.dart' as dio;
 import 'package:smartech_appinbox/smartech_appinbox.dart';
 import 'package:smartech_base/smartech_base.dart';
 import 'package:smartech_nudges/netcore_px.dart';
+import 'package:smartech_nudges/widget.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../presentation/log_in_screen/log_in_screen.dart';
@@ -64,7 +65,7 @@ class _HomeScreen1State extends State<HomeScreen1> {
     //encode Map to JSON
     var body = json.encode(data);
     var response =
-        await dio.Dio().post("https://fabfurni.com/api/Webservice/category",
+          await dio.Dio().post("https://fabfurni.com/api/Webservice/category",
             options: dio.Options(
               headers: {
                 "Content-Type": "application/json",
@@ -529,307 +530,535 @@ class _HomeScreen1State extends State<HomeScreen1> {
                 SizedBox(
                   height: 20,
                 ),
-                Container(
-                    color: ColorConstant.whiteA700,
-                    width: double.maxFinite,
-                    child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          // SingleChildScrollView(
-                          //     scrollDirection: Axis.horizontal,
-                          //     child: IntrinsicWidth(
-                          //         child: Container(
-                          //             height: getVerticalSize(125),
-                          //             width: double.maxFinite,
-                          //             child: Stack(
-                          //                 alignment: Alignment.topRight,
-                          //                 children: [
-                          //                   Align(
-                          //                       alignment: Alignment.center,
-                          //                       child: Container(
-                          //                           padding: getPadding(
-                          //                               left: 21,
-                          //                               top: 14,
-                          //                               right: 21,
-                          //                               bottom: 14),
-                          //                           decoration: AppDecoration
-                          //                               .fillPurple5001,
-                          //                           child: Column(
-                          //                               mainAxisSize:
-                          //                                   MainAxisSize.min,
-                          //                               mainAxisAlignment:
-                          //                                   MainAxisAlignment.end,
-                          //                               children: [
-                          //                                 Padding(
-                          //                                     padding: getPadding(
-                          //                                         left: 6, top: 56),
-                          //                                     child: Row(
-                          //                                         mainAxisAlignment:
-                          //                                             MainAxisAlignment
-                          //                                                 .center,
-                          //                                         children: [
-                          //                                           Padding(
-                          //                                               padding: getPadding(
-                          //                                                   bottom:
-                          //                                                       1),
-                          //                                               child: Text(
-                          //                                                   "lbl_furniture"
-                          //                                                       .tr,
-                          //                                                   overflow:
-                          //                                                       TextOverflow
-                          //                                                           .ellipsis,
-                          //                                                   textAlign:
-                          //                                                       TextAlign
-                          //                                                           .left,
-                          //                                                   style: AppStyle
-                          //                                                       .txtRobotoRegular12Black900)),
-                          //                                           Padding(
-                          //                                               padding: getPadding(
-                          //                                                   left:
-                          //                                                       41,
-                          //                                                   top: 1),
-                          //                                               child: Text(
-                          //                                                   "lbl_living"
-                          //                                                       .tr,
-                          //                                                   overflow:
-                          //                                                       TextOverflow
-                          //                                                           .ellipsis,
-                          //                                                   textAlign:
-                          //                                                       TextAlign
-                          //                                                           .left,
-                          //                                                   style: AppStyle
-                          //                                                       .txtRobotoRegular12Black900)),
-                          //                                           Padding(
-                          //                                               padding: getPadding(
-                          //                                                   left:
-                          //                                                       40,
-                          //                                                   bottom:
-                          //                                                       1),
-                          //                                               child: Text(
-                          //                                                   "lbl_bedroom"
-                          //                                                       .tr,
-                          //                                                   overflow:
-                          //                                                       TextOverflow
-                          //                                                           .ellipsis,
-                          //                                                   textAlign:
-                          //                                                       TextAlign
-                          //                                                           .left,
-                          //                                                   style: AppStyle
-                          //                                                       .txtRobotoRegular12Black900)),
-                          //                                           Padding(
-                          //                                               padding: getPadding(
-                          //                                                   left:
-                          //                                                       28,
-                          //                                                   bottom:
-                          //                                                       1),
-                          //                                               child: Text(
-                          //                                                   "lbl_kids_room"
-                          //                                                       .tr,
-                          //                                                   overflow:
-                          //                                                       TextOverflow
-                          //                                                           .ellipsis,
-                          //                                                   textAlign:
-                          //                                                       TextAlign
-                          //                                                           .left,
-                          //                                                   style: AppStyle
-                          //                                                       .txtRobotoRegular12Black900)),
-                          //                                           Padding(
-                          //                                               padding: getPadding(
-                          //                                                   left:
-                          //                                                       23,
-                          //                                                   bottom:
-                          //                                                       1),
-                          //                                               child: Text(
-                          //                                                   "lbl_mattresses"
-                          //                                                       .tr,
-                          //                                                   overflow:
-                          //                                                       TextOverflow
-                          //                                                           .ellipsis,
-                          //                                                   textAlign:
-                          //                                                       TextAlign
-                          //                                                           .left,
-                          //                                                   style: AppStyle
-                          //                                                       .txtRobotoRegular12Black900))
-                          //                                         ])),
-                          //                                 Padding(
-                          //                                     padding: getPadding(
-                          //                                         top: 15),
-                          //                                     child: Row(
-                          //                                         mainAxisAlignment:
-                          //                                             MainAxisAlignment
-                          //                                                 .center,
-                          //                                         children: [
-                          //                                           Container(
-                          //                                               height:
-                          //                                                   getSize(
-                          //                                                       9),
-                          //                                               width:
-                          //                                                   getSize(
-                          //                                                       9),
-                          //                                               decoration: BoxDecoration(
-                          //                                                   color: ColorConstant
-                          //                                                       .purple900,
-                          //                                                   borderRadius:
-                          //                                                       BorderRadius.circular(getHorizontalSize(4)))),
-                          //                                           Container(
-                          //                                               height:
-                          //                                                   getSize(
-                          //                                                       9),
-                          //                                               width:
-                          //                                                   getSize(
-                          //                                                       9),
-                          //                                               margin: getMargin(
-                          //                                                   left:
-                          //                                                       10),
-                          //                                               decoration: BoxDecoration(
-                          //                                                   color: ColorConstant
-                          //                                                       .gray50001,
-                          //                                                   borderRadius:
-                          //                                                       BorderRadius.circular(getHorizontalSize(4))))
-                          //                                         ]))
-                          //                               ]))),
-                          //                   Align(
-                          //                       alignment: Alignment.topRight,
-                          //                       child: Padding(
-                          //                           padding: getPadding(top: 20),
-                          //                           child: Row(
-                          //                               mainAxisAlignment:
-                          //                                   MainAxisAlignment.end,
-                          //                               mainAxisSize:
-                          //                                   MainAxisSize.min,
-                          //                               children: [
-                          //                                 CustomImageView(
-                          //                                     imagePath:
-                          //                                         ImageConstant
-                          //                                             .imgSofa,
-                          //                                     height: getSize(40),
-                          //                                     width: getSize(40),
-                          //                                     margin:
-                          //                                         getMargin(top: 3),
-                          //                                     onTap: () {
-                          //                                       onTapImgSofa();
-                          //                                     }),
-                          //                                 CustomImageView(
-                          //                                     imagePath:
-                          //                                         ImageConstant
-                          //                                             .imgTvstand,
-                          //                                     height: getSize(40),
-                          //                                     width: getSize(40),
-                          //                                     margin: getMargin(
-                          //                                         left: 41,
-                          //                                         top: 1,
-                          //                                         bottom: 2)),
-                          //                                 CustomImageView(
-                          //                                     imagePath:
-                          //                                         ImageConstant
-                          //                                             .imgBed,
-                          //                                     height: getSize(40),
-                          //                                     width: getSize(40),
-                          //                                     margin: getMargin(
-                          //                                         left: 41,
-                          //                                         top: 2,
-                          //                                         bottom: 1)),
-                          //                                 CustomImageView(
-                          //                                     imagePath:
-                          //                                         ImageConstant
-                          //                                             .imgBabybed,
-                          //                                     height: getSize(40),
-                          //                                     width: getSize(40),
-                          //                                     margin: getMargin(
-                          //                                         left: 41,
-                          //                                         bottom: 3)),
-                          //                                 CustomImageView(
-                          //                                     imagePath:
-                          //                                         ImageConstant
-                          //                                             .imgMattress,
-                          //                                     height: getSize(40),
-                          //                                     width: getSize(40),
-                          //                                     margin: getMargin(
-                          //                                         left: 41,
-                          //                                         bottom: 3)),
-                          //                                 CustomImageView(
-                          //                                     imagePath:
-                          //                                         ImageConstant
-                          //                                             .imgCurtain,
-                          //                                     height: getSize(40),
-                          //                                     width: getSize(40),
-                          //                                     margin: getMargin(
-                          //                                         left: 41,
-                          //                                         bottom: 3)),
-                          //                                 CustomImageView(
-                          //                                     imagePath: ImageConstant
-                          //                                         .imgSpiderplant,
-                          //                                     height: getSize(40),
-                          //                                     width: getSize(40),
-                          //                                     margin: getMargin(
-                          //                                         left: 41,
-                          //                                         bottom: 3)),
-                          //                                 CustomImageView(
-                          //                                     svgPath: ImageConstant
-                          //                                         .imgUser,
-                          //                                     height: getSize(40),
-                          //                                     width: getSize(40),
-                          //                                     margin: getMargin(
-                          //                                         left: 41,
-                          //                                         bottom: 3)),
-                          //                                 CustomImageView(
-                          //                                     imagePath:
-                          //                                         ImageConstant
-                          //                                             .imgMicrowave,
-                          //                                     height: getSize(40),
-                          //                                     width: getSize(40),
-                          //                                     margin: getMargin(
-                          //                                         left: 41,
-                          //                                         top: 3)),
-                          //                                 CustomImageView(
-                          //                                     imagePath:
-                          //                                         ImageConstant
-                          //                                             .imgWardrobe,
-                          //                                     height: getSize(40),
-                          //                                     width: getSize(40),
-                          //                                     margin: getMargin(
-                          //                                         left: 41,
-                          //                                         bottom: 3))
-                          //                               ])))
-                          //                 ])))),
-                          SizedBox(
-                            height: 8,
-                          ),
-                          // banners.length != 0
-                          //?
-                          Container(
-                              // height: 50.h,
+                SmartechView(
+                  key: ValueKey("netcore_"),
+                  child: Container(
+                      color: ColorConstant.whiteA700,
+                      width: double.maxFinite,
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            // SingleChildScrollView(
+                            //     scrollDirection: Axis.horizontal,
+                            //     child: IntrinsicWidth(
+                            //         child: Container(
+                            //             height: getVerticalSize(125),
+                            //             width: double.maxFinite,
+                            //             child: Stack(
+                            //                 alignment: Alignment.topRight,
+                            //                 children: [
+                            //                   Align(
+                            //                       alignment: Alignment.center,
+                            //                       child: Container(
+                            //                           padding: getPadding(
+                            //                               left: 21,
+                            //                               top: 14,
+                            //                               right: 21,
+                            //                               bottom: 14),
+                            //                           decoration: AppDecoration
+                            //                               .fillPurple5001,
+                            //                           child: Column(
+                            //                               mainAxisSize:
+                            //                                   MainAxisSize.min,
+                            //                               mainAxisAlignment:
+                            //                                   MainAxisAlignment.end,
+                            //                               children: [
+                            //                                 Padding(
+                            //                                     padding: getPadding(
+                            //                                         left: 6, top: 56),
+                            //                                     child: Row(
+                            //                                         mainAxisAlignment:
+                            //                                             MainAxisAlignment
+                            //                                                 .center,
+                            //                                         children: [
+                            //                                           Padding(
+                            //                                               padding: getPadding(
+                            //                                                   bottom:
+                            //                                                       1),
+                            //                                               child: Text(
+                            //                                                   "lbl_furniture"
+                            //                                                       .tr,
+                            //                                                   overflow:
+                            //                                                       TextOverflow
+                            //                                                           .ellipsis,
+                            //                                                   textAlign:
+                            //                                                       TextAlign
+                            //                                                           .left,
+                            //                                                   style: AppStyle
+                            //                                                       .txtRobotoRegular12Black900)),
+                            //                                           Padding(
+                            //                                               padding: getPadding(
+                            //                                                   left:
+                            //                                                       41,
+                            //                                                   top: 1),
+                            //                                               child: Text(
+                            //                                                   "lbl_living"
+                            //                                                       .tr,
+                            //                                                   overflow:
+                            //                                                       TextOverflow
+                            //                                                           .ellipsis,
+                            //                                                   textAlign:
+                            //                                                       TextAlign
+                            //                                                           .left,
+                            //                                                   style: AppStyle
+                            //                                                       .txtRobotoRegular12Black900)),
+                            //                                           Padding(
+                            //                                               padding: getPadding(
+                            //                                                   left:
+                            //                                                       40,
+                            //                                                   bottom:
+                            //                                                       1),
+                            //                                               child: Text(
+                            //                                                   "lbl_bedroom"
+                            //                                                       .tr,
+                            //                                                   overflow:
+                            //                                                       TextOverflow
+                            //                                                           .ellipsis,
+                            //                                                   textAlign:
+                            //                                                       TextAlign
+                            //                                                           .left,
+                            //                                                   style: AppStyle
+                            //                                                       .txtRobotoRegular12Black900)),
+                            //                                           Padding(
+                            //                                               padding: getPadding(
+                            //                                                   left:
+                            //                                                       28,
+                            //                                                   bottom:
+                            //                                                       1),
+                            //                                               child: Text(
+                            //                                                   "lbl_kids_room"
+                            //                                                       .tr,
+                            //                                                   overflow:
+                            //                                                       TextOverflow
+                            //                                                           .ellipsis,
+                            //                                                   textAlign:
+                            //                                                       TextAlign
+                            //                                                           .left,
+                            //                                                   style: AppStyle
+                            //                                                       .txtRobotoRegular12Black900)),
+                            //                                           Padding(
+                            //                                               padding: getPadding(
+                            //                                                   left:
+                            //                                                       23,
+                            //                                                   bottom:
+                            //                                                       1),
+                            //                                               child: Text(
+                            //                                                   "lbl_mattresses"
+                            //                                                       .tr,
+                            //                                                   overflow:
+                            //                                                       TextOverflow
+                            //                                                           .ellipsis,
+                            //                                                   textAlign:
+                            //                                                       TextAlign
+                            //                                                           .left,
+                            //                                                   style: AppStyle
+                            //                                                       .txtRobotoRegular12Black900))
+                            //                                         ])),
+                            //                                 Padding(
+                            //                                     padding: getPadding(
+                            //                                         top: 15),
+                            //                                     child: Row(
+                            //                                         mainAxisAlignment:
+                            //                                             MainAxisAlignment
+                            //                                                 .center,
+                            //                                         children: [
+                            //                                           Container(
+                            //                                               height:
+                            //                                                   getSize(
+                            //                                                       9),
+                            //                                               width:
+                            //                                                   getSize(
+                            //                                                       9),
+                            //                                               decoration: BoxDecoration(
+                            //                                                   color: ColorConstant
+                            //                                                       .purple900,
+                            //                                                   borderRadius:
+                            //                                                       BorderRadius.circular(getHorizontalSize(4)))),
+                            //                                           Container(
+                            //                                               height:
+                            //                                                   getSize(
+                            //                                                       9),
+                            //                                               width:
+                            //                                                   getSize(
+                            //                                                       9),
+                            //                                               margin: getMargin(
+                            //                                                   left:
+                            //                                                       10),
+                            //                                               decoration: BoxDecoration(
+                            //                                                   color: ColorConstant
+                            //                                                       .gray50001,
+                            //                                                   borderRadius:
+                            //                                                       BorderRadius.circular(getHorizontalSize(4))))
+                            //                                         ]))
+                            //                               ]))),
+                            //                   Align(
+                            //                       alignment: Alignment.topRight,
+                            //                       child: Padding(
+                            //                           padding: getPadding(top: 20),
+                            //                           child: Row(
+                            //                               mainAxisAlignment:
+                            //                                   MainAxisAlignment.end,
+                            //                               mainAxisSize:
+                            //                                   MainAxisSize.min,
+                            //                               children: [
+                            //                                 CustomImageView(
+                            //                                     imagePath:
+                            //                                         ImageConstant
+                            //                                             .imgSofa,
+                            //                                     height: getSize(40),
+                            //                                     width: getSize(40),
+                            //                                     margin:
+                            //                                         getMargin(top: 3),
+                            //                                     onTap: () {
+                            //                                       onTapImgSofa();
+                            //                                     }),
+                            //                                 CustomImageView(
+                            //                                     imagePath:
+                            //                                         ImageConstant
+                            //                                             .imgTvstand,
+                            //                                     height: getSize(40),
+                            //                                     width: getSize(40),
+                            //                                     margin: getMargin(
+                            //                                         left: 41,
+                            //                                         top: 1,
+                            //                                         bottom: 2)),
+                            //                                 CustomImageView(
+                            //                                     imagePath:
+                            //                                         ImageConstant
+                            //                                             .imgBed,
+                            //                                     height: getSize(40),
+                            //                                     width: getSize(40),
+                            //                                     margin: getMargin(
+                            //                                         left: 41,
+                            //                                         top: 2,
+                            //                                         bottom: 1)),
+                            //                                 CustomImageView(
+                            //                                     imagePath:
+                            //                                         ImageConstant
+                            //                                             .imgBabybed,
+                            //                                     height: getSize(40),
+                            //                                     width: getSize(40),
+                            //                                     margin: getMargin(
+                            //                                         left: 41,
+                            //                                         bottom: 3)),
+                            //                                 CustomImageView(
+                            //                                     imagePath:
+                            //                                         ImageConstant
+                            //                                             .imgMattress,
+                            //                                     height: getSize(40),
+                            //                                     width: getSize(40),
+                            //                                     margin: getMargin(
+                            //                                         left: 41,
+                            //                                         bottom: 3)),
+                            //                                 CustomImageView(
+                            //                                     imagePath:
+                            //                                         ImageConstant
+                            //                                             .imgCurtain,
+                            //                                     height: getSize(40),
+                            //                                     width: getSize(40),
+                            //                                     margin: getMargin(
+                            //                                         left: 41,
+                            //                                         bottom: 3)),
+                            //                                 CustomImageView(
+                            //                                     imagePath: ImageConstant
+                            //                                         .imgSpiderplant,
+                            //                                     height: getSize(40),
+                            //                                     width: getSize(40),
+                            //                                     margin: getMargin(
+                            //                                         left: 41,
+                            //                                         bottom: 3)),
+                            //                                 CustomImageView(
+                            //                                     svgPath: ImageConstant
+                            //                                         .imgUser,
+                            //                                     height: getSize(40),
+                            //                                     width: getSize(40),
+                            //                                     margin: getMargin(
+                            //                                         left: 41,
+                            //                                         bottom: 3)),
+                            //                                 CustomImageView(
+                            //                                     imagePath:
+                            //                                         ImageConstant
+                            //                                             .imgMicrowave,
+                            //                                     height: getSize(40),
+                            //                                     width: getSize(40),
+                            //                                     margin: getMargin(
+                            //                                         left: 41,
+                            //                                         top: 3)),
+                            //                                 CustomImageView(
+                            //                                     imagePath:
+                            //                                         ImageConstant
+                            //                                             .imgWardrobe,
+                            //                                     height: getSize(40),
+                            //                                     width: getSize(40),
+                            //                                     margin: getMargin(
+                            //                                         left: 41,
+                            //                                         bottom: 3))
+                            //                               ])))
+                            //                 ])))),
+                            SizedBox(
+                              height: 8,
+                            ),
+                            // banners.length != 0
+                            //?
+                            Container(
+                                // height: 50.h,
+                                // width: 200.w,
+                                padding: getPadding(left: 10, right: 10),
+                                // color: Colors.black,
+                                child: carousel.CarouselSlider.builder(
+                                    options: carousel.CarouselOptions(
+                                      //height: getVerticalSize(215),
+                                      initialPage: 0,
+                                      autoPlay: true,
+                                      viewportFraction: 1.0,
+                                      enableInfiniteScroll: true,
+                                      autoPlayCurve: Curves.fastOutSlowIn,
+                                      scrollDirection: Axis.horizontal,
+                                      onPageChanged: (index, reason) {
+                                        silderIndex = index;
+                                      },
+                                      // onScrolled: (index) {
+                                      //   controller.silderIndex.value =
+                                      //       index as int;
+                                      // }
+                                    ),
+                                    itemCount: bannerImages.length,
+                                    //banners.length,
+                                    itemBuilder: (context, index, realIndex) {
+                                      // SliderItemModel model = controller
+                                      //     .productDetailModelObj
+                                      //     .value
+                                      //     .sliderItemList[index];
+                                      return GestureDetector(
+                                        onTap: () {
+                                          if (banners[index].keywordId == '0' ||
+                                              banners[index].keywordId == null) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(SnackBar(
+                                                    content: Text("No Data"),
+                                                    backgroundColor:
+                                                        Colors.redAccent));
+                                          } else {
+                                            Navigator.of(context)
+                                                .push(MaterialPageRoute(
+                                              builder: (context) =>
+                                                  productlisrafterclickonbanner1(
+                                                      banners[index].keywordId!,
+                                                      '',
+                                                      '',
+                                                      ''),
+                                            ));
+                                          }
+                                        },
+                                        child: Image.asset(
+                                          //banners[index].image!,
+                                          bannerImages[index],
+                                          fit: BoxFit.fill,
+                                          width: 95.w,
+                                          alignment: Alignment(1.2, 1.2),
+                                          filterQuality: FilterQuality.high,
+                                          // loadingBuilder: (context, child,
+                                          //         loadingProgress) =>
+                                          //     (loadingProgress == null)
+                                          //         ? child
+                                          //         : AnimatedShimmer(
+                                          //             height: 206,
+                                          //             width: 100.w,
+                                          //             borderRadius:
+                                          //                 const BorderRadius
+                                          //                     .all(
+                                          //                     Radius.circular(
+                                          //                         10)),
+                                          //             delayInMilliSeconds:
+                                          //                 Duration(
+                                          //                     milliseconds:
+                                          //                         index * 5),
+                                          //           ),
+                                          // CircularProgressIndicator(
+                                          //         color: Color(0xff9BA6BF),
+                                          //         strokeWidth: 2,
+                                          //       ),
+                                          errorBuilder: (context, error,
+                                                  stackTrace) =>
+                                              Image.asset(
+                                                  "assets/images/image_not_found.png"),
+                                        ),
+                                      );
+                                      // SliderItemWidget(model);
+                                    })
+                                // ListView.separated(
+                                //   // set the scroll direction to horizontal
+                                //     itemCount: banners.length,
+                                //     scrollDirection: Axis.horizontal,
+                                //     separatorBuilder: (context, int) {
+                                //       return Padding(
+                                //         padding: EdgeInsets.fromLTRB(5,0, 5, 0),
+                                //       );
+                                //     },
+                                //     itemBuilder: (context, index) {
+                                //       // return
+                                //       //   SvgPicture.network(banners[index].image);
+                                //       return GestureDetector(
+                                //         onTap: (){
+                                //           if(banners[index].keywordId=='0' || banners[index].keywordId==null){
+                                //             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                //                 content: Text("No Data"),
+                                //                 backgroundColor: Colors.redAccent));
+                                //           }else{
+                                //             Navigator.of(context).push(MaterialPageRoute(
+                                //               builder: (context) => productlisrafterclickonbanner1(banners[index].keywordId,'','',''),
+                                //             ));}
+                                //         },
+                                //         child: Image.network(
+                                //           banners[index].image,
+                                //           fit: BoxFit.cover,
+                                //           width: 95.w,
+                                //           alignment: Alignment(1.2, 1.2),
+                                //           filterQuality: FilterQuality.high,
+                                //           loadingBuilder:
+                                //               (context, child, loadingProgress) =>
+                                //           (loadingProgress == null)
+                                //               ? child
+                                //               : AnimatedShimmer(
+                                //             height: 206,
+                                //             width: 100.w,
+                                //             borderRadius: const BorderRadius.all(Radius.circular(10)),
+                                //             delayInMilliSeconds: Duration(milliseconds: index * 500),
+                                //           ),
+                                //           // CircularProgressIndicator(
+                                //           //         color: Color(0xff9BA6BF),
+                                //           //         strokeWidth: 2,
+                                //           //       ),
+                                //           errorBuilder: (context, error, stackTrace) =>
+                                //               Image.asset(
+                                //                   "assets/images/image_not_found.png"),
+                                //         ),
+                                //       );
+                                //       // return CustomImageView(
+                                //       //     onTap: (){
+                                //       //       pushScreen(
+                                //       //         context,
+                                //       //         screen: StoreScreen(widget.data),
+                                //       //         withNavBar: true, // OPTIONAL VALUE. True by default.
+                                //       //         pageTransitionAnimation: PageTransitionAnimation.cupertino,
+                                //       //       );
+                                //       //     },
+                                //       //     url:"https://fabfurni.com/assets/uploads/1682784086decore-icon_2_.svg",
+                                //       //     // ImageConstant.imgFurnituresocialmediabanner,
+                                //       //     // height: getVerticalSize(206),
+                                //       //     // width: getHorizontalSize(396),
+                                //       //     margin: getMargin(top: 13,left: 10));
+                                //     }
+                                //   // CategoryCard(
+                                //   //     title: 'Furniture',
+                                //   //     previewImageAsset: ImageConstant.imgSofa,
+                                //   //     onTap: () {
+                                //   //       pushScreen(
+                                //   //         context,
+                                //   //         screen: ClickAfterSlectTabFurnitureScreen(widget.data),
+                                //   //         withNavBar: true, // OPTIONAL VALUE. True by default.
+                                //   //         pageTransitionAnimation: PageTransitionAnimation.cupertino,
+                                //   //       );
+                                //   //       // Get.toNamed(AppRoutes.clickAfterSlectTabFurnitureScreen);
+                                //   //     }),
+                                //   // // space them using a sized box
+                                //   // SizedBox(
+                                //   //   width: 15,
+                                //   // ),
+                                //   // CategoryCard(
+                                //   //     title: 'Living',
+                                //   //     previewImageAsset: ImageConstant.imgTvstand,
+                                //   //     onTap: () {}),
+                                //   // SizedBox(
+                                //   //   width: 15,
+                                //   // ),
+                                //   // CategoryCard(
+                                //   //     title: 'Bedroom',
+                                //   //     previewImageAsset: ImageConstant.imgBed,
+                                //   //     onTap: () {}),
+                                //   // SizedBox(
+                                //   //   width: 15,
+                                //   // ),
+                                //   // CategoryCard(
+                                //   //     title: 'Kids Room',
+                                //   //     previewImageAsset: ImageConstant.imgBabybed,
+                                //   //     onTap: () {}),
+                                //   // SizedBox(
+                                //   //   width: 15,
+                                //   // ),
+                                //   // CategoryCard(
+                                //   //     title: 'Mattresses',
+                                //   //     previewImageAsset: ImageConstant.imgMattress,
+                                //   //     onTap: () {}),
+                                //   // SizedBox(
+                                //   //   width: 15,
+                                //   // ),
+                                //   // CategoryCard(
+                                //   //     title: 'Furnishings',
+                                //   //     previewImageAsset: ImageConstant.imgCurtain,
+                                //   //     onTap: () {}),
+                                //   // SizedBox(
+                                //   //   width: 15,
+                                //   // ),
+                                //   // CategoryCard(
+                                //   //     title: 'Decor',
+                                //   //     previewImageAsset: ImageConstant.imgSpiderplant,
+                                //   //     onTap: () {}),
+                                //   // SizedBox(
+                                //   //   width: 15,
+                                //   // ),
+                                //   // CategoryCard(
+                                //   //     title: 'Lighting',
+                                //   //     previewImageAsset: 'assets/images/vector-cH4.png',
+                                //   //     onTap: () {}),
+                                //   // SizedBox(
+                                //   //   width: 15,
+                                //   // ),
+                                //   // CategoryCard(
+                                //   //     title: 'Appliances',
+                                //   //     previewImageAsset: ImageConstant.imgMicrowave,
+                                //   //     onTap: () {}),
+                                //   // SizedBox(
+                                //   //   width: 15,
+                                //   // ),
+                                //   // CategoryCard(
+                                //   //     title: 'Modular Furniture',
+                                //   //     previewImageAsset: ImageConstant.imgWardrobe,
+                                //   //     onTap: () {}),
+                                //   // SizedBox(
+                                //   //   width: 15,
+                                //   // ),
+                                //
+                                // ),
+                                ),
+                            // : Container(),
+                            SizedBox(
+                              height: 2.h,
+                            ),
+                            Container(
+                              height: 206,
                               // width: 200.w,
-                              padding: getPadding(left: 10, right: 10),
                               // color: Colors.black,
-                              child: carousel.CarouselSlider.builder(
-                                  options: carousel.CarouselOptions(
-                                    //height: getVerticalSize(215),
-                                    initialPage: 0,
-                                    autoPlay: true,
-                                    viewportFraction: 1.0,
-                                    enableInfiniteScroll: true,
-                                    autoPlayCurve: Curves.fastOutSlowIn,
-                                    scrollDirection: Axis.horizontal,
-                                    onPageChanged: (index, reason) {
-                                      silderIndex = index;
-                                    },
-                                    // onScrolled: (index) {
-                                    //   controller.silderIndex.value =
-                                    //       index as int;
-                                    // }
-                                  ),
-                                  itemCount: bannerImages.length,
-                                  //banners.length,
-                                  itemBuilder: (context, index, realIndex) {
-                                    // SliderItemModel model = controller
-                                    //     .productDetailModelObj
-                                    //     .value
-                                    //     .sliderItemList[index];
+                              padding: getPadding(left: 10, right: 10),
+                              child: ListView.separated(
+                                  // set the scroll direction to horizontal
+                                  itemCount: 3,
+                                  // bannersresportrait.length,
+                                  scrollDirection: Axis.horizontal,
+                                  separatorBuilder: (context, int) {
+                                    return Padding(
+                                      padding: getPadding(left: 10, right: 10),
+                                    );
+                                  },
+                                  itemBuilder: (context, index) {
+                                    // return
+                                    //   SvgPicture.network(banners[index].image);
                                     return GestureDetector(
                                       onTap: () {
-                                        if (banners[index].keywordId == '0' ||
-                                            banners[index].keywordId == null) {
+                                        if (bannersresportrait[index].keywordId ==
+                                                '0' ||
+                                            bannersresportrait[index].keywordId ==
+                                                null) {
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(SnackBar(
                                                   content: Text("No Data"),
@@ -840,413 +1069,188 @@ class _HomeScreen1State extends State<HomeScreen1> {
                                               .push(MaterialPageRoute(
                                             builder: (context) =>
                                                 productlisrafterclickonbanner1(
-                                                    banners[index].keywordId!,
+                                                    bannersresportrait[index]
+                                                        .keywordId!,
                                                     '',
                                                     '',
                                                     ''),
                                           ));
                                         }
+                                        // print("tapped");
+                                        // Navigator.of(context).push(MaterialPageRoute(
+                                        //   builder: (context) => ProductDetailScreen(widget.data,bannersresportrait[index].id),
+                                        // ));
                                       },
-                                      child: Image.asset(
-                                        //banners[index].image!,
-                                        bannerImages[index],
-                                        fit: BoxFit.fill,
-                                        width: 95.w,
-                                        alignment: Alignment(1.2, 1.2),
-                                        filterQuality: FilterQuality.high,
-                                        // loadingBuilder: (context, child,
-                                        //         loadingProgress) =>
-                                        //     (loadingProgress == null)
-                                        //         ? child
-                                        //         : AnimatedShimmer(
-                                        //             height: 206,
-                                        //             width: 100.w,
-                                        //             borderRadius:
-                                        //                 const BorderRadius
-                                        //                     .all(
-                                        //                     Radius.circular(
-                                        //                         10)),
-                                        //             delayInMilliSeconds:
-                                        //                 Duration(
-                                        //                     milliseconds:
-                                        //                         index * 5),
-                                        //           ),
-                                        // CircularProgressIndicator(
-                                        //         color: Color(0xff9BA6BF),
-                                        //         strokeWidth: 2,
-                                        //       ),
-                                        errorBuilder: (context, error,
-                                                stackTrace) =>
-                                            Image.asset(
-                                                "assets/images/image_not_found.png"),
+                                      child: Container(
+                                        width: 250,
+                                        // height: 200,
+                                        // color: Colors.black,
+                                        child: Image.asset(
+                                          "assets/images/img_image1.png",
+                                          //bannersresportrait[index].image!,
+                                          fit: BoxFit.cover,
+                                          // width: 100.w,
+                                          // height: 100.h,
+                                          alignment: Alignment(0.8, 0.8),
+                                          filterQuality: FilterQuality.high,
+                                          // loadingBuilder: (context, child,
+                                          //         loadingProgress) =>
+                                          //     (loadingProgress == null)
+                                          //         ? child
+                                          //         : AnimatedShimmer(
+                                          //             height: 206,
+                                          //             width: 250,
+                                          //             borderRadius:
+                                          //                 const BorderRadius.all(
+                                          //                     Radius.circular(
+                                          //                         10)),
+                                          //             delayInMilliSeconds:
+                                          //                 Duration(
+                                          //                     milliseconds:
+                                          //                         index * 5),
+                                          //           ),
+                                          errorBuilder: (context, error,
+                                                  stackTrace) =>
+                                              Image.asset(
+                                                  "assets/images/image_not_found.png"),
+                                        ),
                                       ),
                                     );
-                                    // SliderItemWidget(model);
-                                  })
-                              // ListView.separated(
-                              //   // set the scroll direction to horizontal
-                              //     itemCount: banners.length,
-                              //     scrollDirection: Axis.horizontal,
-                              //     separatorBuilder: (context, int) {
-                              //       return Padding(
-                              //         padding: EdgeInsets.fromLTRB(5,0, 5, 0),
-                              //       );
-                              //     },
-                              //     itemBuilder: (context, index) {
-                              //       // return
-                              //       //   SvgPicture.network(banners[index].image);
-                              //       return GestureDetector(
-                              //         onTap: (){
-                              //           if(banners[index].keywordId=='0' || banners[index].keywordId==null){
-                              //             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              //                 content: Text("No Data"),
-                              //                 backgroundColor: Colors.redAccent));
-                              //           }else{
-                              //             Navigator.of(context).push(MaterialPageRoute(
-                              //               builder: (context) => productlisrafterclickonbanner1(banners[index].keywordId,'','',''),
-                              //             ));}
-                              //         },
-                              //         child: Image.network(
-                              //           banners[index].image,
-                              //           fit: BoxFit.cover,
-                              //           width: 95.w,
-                              //           alignment: Alignment(1.2, 1.2),
-                              //           filterQuality: FilterQuality.high,
-                              //           loadingBuilder:
-                              //               (context, child, loadingProgress) =>
-                              //           (loadingProgress == null)
-                              //               ? child
-                              //               : AnimatedShimmer(
-                              //             height: 206,
-                              //             width: 100.w,
-                              //             borderRadius: const BorderRadius.all(Radius.circular(10)),
-                              //             delayInMilliSeconds: Duration(milliseconds: index * 500),
-                              //           ),
-                              //           // CircularProgressIndicator(
-                              //           //         color: Color(0xff9BA6BF),
-                              //           //         strokeWidth: 2,
-                              //           //       ),
-                              //           errorBuilder: (context, error, stackTrace) =>
-                              //               Image.asset(
-                              //                   "assets/images/image_not_found.png"),
-                              //         ),
-                              //       );
-                              //       // return CustomImageView(
-                              //       //     onTap: (){
-                              //       //       pushScreen(
-                              //       //         context,
-                              //       //         screen: StoreScreen(widget.data),
-                              //       //         withNavBar: true, // OPTIONAL VALUE. True by default.
-                              //       //         pageTransitionAnimation: PageTransitionAnimation.cupertino,
-                              //       //       );
-                              //       //     },
-                              //       //     url:"https://fabfurni.com/assets/uploads/1682784086decore-icon_2_.svg",
-                              //       //     // ImageConstant.imgFurnituresocialmediabanner,
-                              //       //     // height: getVerticalSize(206),
-                              //       //     // width: getHorizontalSize(396),
-                              //       //     margin: getMargin(top: 13,left: 10));
-                              //     }
-                              //   // CategoryCard(
-                              //   //     title: 'Furniture',
-                              //   //     previewImageAsset: ImageConstant.imgSofa,
-                              //   //     onTap: () {
-                              //   //       pushScreen(
-                              //   //         context,
-                              //   //         screen: ClickAfterSlectTabFurnitureScreen(widget.data),
-                              //   //         withNavBar: true, // OPTIONAL VALUE. True by default.
-                              //   //         pageTransitionAnimation: PageTransitionAnimation.cupertino,
-                              //   //       );
-                              //   //       // Get.toNamed(AppRoutes.clickAfterSlectTabFurnitureScreen);
-                              //   //     }),
-                              //   // // space them using a sized box
-                              //   // SizedBox(
-                              //   //   width: 15,
-                              //   // ),
-                              //   // CategoryCard(
-                              //   //     title: 'Living',
-                              //   //     previewImageAsset: ImageConstant.imgTvstand,
-                              //   //     onTap: () {}),
-                              //   // SizedBox(
-                              //   //   width: 15,
-                              //   // ),
-                              //   // CategoryCard(
-                              //   //     title: 'Bedroom',
-                              //   //     previewImageAsset: ImageConstant.imgBed,
-                              //   //     onTap: () {}),
-                              //   // SizedBox(
-                              //   //   width: 15,
-                              //   // ),
-                              //   // CategoryCard(
-                              //   //     title: 'Kids Room',
-                              //   //     previewImageAsset: ImageConstant.imgBabybed,
-                              //   //     onTap: () {}),
-                              //   // SizedBox(
-                              //   //   width: 15,
-                              //   // ),
-                              //   // CategoryCard(
-                              //   //     title: 'Mattresses',
-                              //   //     previewImageAsset: ImageConstant.imgMattress,
-                              //   //     onTap: () {}),
-                              //   // SizedBox(
-                              //   //   width: 15,
-                              //   // ),
-                              //   // CategoryCard(
-                              //   //     title: 'Furnishings',
-                              //   //     previewImageAsset: ImageConstant.imgCurtain,
-                              //   //     onTap: () {}),
-                              //   // SizedBox(
-                              //   //   width: 15,
-                              //   // ),
-                              //   // CategoryCard(
-                              //   //     title: 'Decor',
-                              //   //     previewImageAsset: ImageConstant.imgSpiderplant,
-                              //   //     onTap: () {}),
-                              //   // SizedBox(
-                              //   //   width: 15,
-                              //   // ),
-                              //   // CategoryCard(
-                              //   //     title: 'Lighting',
-                              //   //     previewImageAsset: 'assets/images/vector-cH4.png',
-                              //   //     onTap: () {}),
-                              //   // SizedBox(
-                              //   //   width: 15,
-                              //   // ),
-                              //   // CategoryCard(
-                              //   //     title: 'Appliances',
-                              //   //     previewImageAsset: ImageConstant.imgMicrowave,
-                              //   //     onTap: () {}),
-                              //   // SizedBox(
-                              //   //   width: 15,
-                              //   // ),
-                              //   // CategoryCard(
-                              //   //     title: 'Modular Furniture',
-                              //   //     previewImageAsset: ImageConstant.imgWardrobe,
-                              //   //     onTap: () {}),
-                              //   // SizedBox(
-                              //   //   width: 15,
-                              //   // ),
-                              //
-                              // ),
-                              ),
-                          // : Container(),
-                          SizedBox(
-                            height: 2.h,
-                          ),
-                          Container(
-                            height: 206,
-                            // width: 200.w,
-                            // color: Colors.black,
-                            padding: getPadding(left: 10, right: 10),
-                            child: ListView.separated(
-                                // set the scroll direction to horizontal
-                                itemCount: 3,
-                                // bannersresportrait.length,
-                                scrollDirection: Axis.horizontal,
-                                separatorBuilder: (context, int) {
-                                  return Padding(
-                                    padding: getPadding(left: 10, right: 10),
-                                  );
-                                },
-                                itemBuilder: (context, index) {
-                                  // return
-                                  //   SvgPicture.network(banners[index].image);
-                                  return GestureDetector(
-                                    onTap: () {
-                                      if (bannersresportrait[index].keywordId ==
-                                              '0' ||
-                                          bannersresportrait[index].keywordId ==
-                                              null) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(SnackBar(
-                                                content: Text("No Data"),
-                                                backgroundColor:
-                                                    Colors.redAccent));
-                                      } else {
-                                        Navigator.of(context)
-                                            .push(MaterialPageRoute(
-                                          builder: (context) =>
-                                              productlisrafterclickonbanner1(
-                                                  bannersresportrait[index]
-                                                      .keywordId!,
-                                                  '',
-                                                  '',
-                                                  ''),
-                                        ));
-                                      }
-                                      // print("tapped");
-                                      // Navigator.of(context).push(MaterialPageRoute(
-                                      //   builder: (context) => ProductDetailScreen(widget.data,bannersresportrait[index].id),
-                                      // ));
-                                    },
-                                    child: Container(
-                                      width: 250,
-                                      // height: 200,
-                                      // color: Colors.black,
-                                      child: Image.asset(
-                                        "assets/images/img_image1.png",
-                                        //bannersresportrait[index].image!,
-                                        fit: BoxFit.cover,
-                                        // width: 100.w,
-                                        // height: 100.h,
-                                        alignment: Alignment(0.8, 0.8),
-                                        filterQuality: FilterQuality.high,
-                                        // loadingBuilder: (context, child,
-                                        //         loadingProgress) =>
-                                        //     (loadingProgress == null)
-                                        //         ? child
-                                        //         : AnimatedShimmer(
-                                        //             height: 206,
-                                        //             width: 250,
-                                        //             borderRadius:
-                                        //                 const BorderRadius.all(
-                                        //                     Radius.circular(
-                                        //                         10)),
-                                        //             delayInMilliSeconds:
-                                        //                 Duration(
-                                        //                     milliseconds:
-                                        //                         index * 5),
-                                        //           ),
-                                        errorBuilder: (context, error,
-                                                stackTrace) =>
-                                            Image.asset(
-                                                "assets/images/image_not_found.png"),
-                                      ),
-                                    ),
-                                  );
-                                  // return CustomImageView(
-                                  //     onTap: (){
+                                    // return CustomImageView(
+                                    //     onTap: (){
+                                    //       pushScreen(
+                                    //         context,
+                                    //         screen: StoreScreen(widget.data),
+                                    //         withNavBar: true, // OPTIONAL VALUE. True by default.
+                                    //         pageTransitionAnimation: PageTransitionAnimation.cupertino,
+                                    //       );
+                                    //     },
+                                    //     url:"https://fabfurni.com/assets/uploads/1682784086decore-icon_2_.svg",
+                                    //     // ImageConstant.imgFurnituresocialmediabanner,
+                                    //     // height: getVerticalSize(206),
+                                    //     // width: getHorizontalSize(396),
+                                    //     margin: getMargin(top: 13,left: 10));
+                                  }
+                                  // CategoryCard(
+                                  //     title: 'Furniture',
+                                  //     previewImageAsset: ImageConstant.imgSofa,
+                                  //     onTap: () {
                                   //       pushScreen(
                                   //         context,
-                                  //         screen: StoreScreen(widget.data),
+                                  //         screen: ClickAfterSlectTabFurnitureScreen(widget.data),
                                   //         withNavBar: true, // OPTIONAL VALUE. True by default.
                                   //         pageTransitionAnimation: PageTransitionAnimation.cupertino,
                                   //       );
-                                  //     },
-                                  //     url:"https://fabfurni.com/assets/uploads/1682784086decore-icon_2_.svg",
-                                  //     // ImageConstant.imgFurnituresocialmediabanner,
-                                  //     // height: getVerticalSize(206),
-                                  //     // width: getHorizontalSize(396),
-                                  //     margin: getMargin(top: 13,left: 10));
-                                }
-                                // CategoryCard(
-                                //     title: 'Furniture',
-                                //     previewImageAsset: ImageConstant.imgSofa,
-                                //     onTap: () {
-                                //       pushScreen(
-                                //         context,
-                                //         screen: ClickAfterSlectTabFurnitureScreen(widget.data),
-                                //         withNavBar: true, // OPTIONAL VALUE. True by default.
-                                //         pageTransitionAnimation: PageTransitionAnimation.cupertino,
-                                //       );
-                                //       // Get.toNamed(AppRoutes.clickAfterSlectTabFurnitureScreen);
-                                //     }),
-                                // // space them using a sized box
-                                // SizedBox(
-                                //   width: 15,
-                                // ),
-                                // CategoryCard(
-                                //     title: 'Living',
-                                //     previewImageAsset: ImageConstant.imgTvstand,
-                                //     onTap: () {}),
-                                // SizedBox(
-                                //   width: 15,
-                                // ),
-                                // CategoryCard(
-                                //     title: 'Bedroom',
-                                //     previewImageAsset: ImageConstant.imgBed,
-                                //     onTap: () {}),
-                                // SizedBox(
-                                //   width: 15,
-                                // ),
-                                // CategoryCard(
-                                //     title: 'Kids Room',
-                                //     previewImageAsset: ImageConstant.imgBabybed,
-                                //     onTap: () {}),
-                                // SizedBox(
-                                //   width: 15,
-                                // ),
-                                // CategoryCard(
-                                //     title: 'Mattresses',
-                                //     previewImageAsset: ImageConstant.imgMattress,
-                                //     onTap: () {}),
-                                // SizedBox(
-                                //   width: 15,
-                                // ),
-                                // CategoryCard(
-                                //     title: 'Furnishings',
-                                //     previewImageAsset: ImageConstant.imgCurtain,
-                                //     onTap: () {}),
-                                // SizedBox(
-                                //   width: 15,
-                                // ),
-                                // CategoryCard(
-                                //     title: 'Decor',
-                                //     previewImageAsset: ImageConstant.imgSpiderplant,
-                                //     onTap: () {}),
-                                // SizedBox(
-                                //   width: 15,
-                                // ),
-                                // CategoryCard(
-                                //     title: 'Lighting',
-                                //     previewImageAsset: 'assets/images/vector-cH4.png',
-                                //     onTap: () {}),
-                                // SizedBox(
-                                //   width: 15,
-                                // ),
-                                // CategoryCard(
-                                //     title: 'Appliances',
-                                //     previewImageAsset: ImageConstant.imgMicrowave,
-                                //     onTap: () {}),
-                                // SizedBox(
-                                //   width: 15,
-                                // ),
-                                // CategoryCard(
-                                //     title: 'Modular Furniture',
-                                //     previewImageAsset: ImageConstant.imgWardrobe,
-                                //     onTap: () {}),
-                                // SizedBox(
-                                //   width: 15,
-                                // ),
-
-                                ),
-                          ),
-                          // Padding(
-                          //     padding: getPadding(left: 15, top: 22, right: 18),
-                          //     child: Row(
-                          //         mainAxisAlignment: MainAxisAlignment.center,
-                          //         children: [
-                          //           CustomImageView(
-                          //               onTap: (){
-                          //                 pushScreen(
-                          //                   context,
-                          //                   screen: ClickAfterSlectTabFurnitureScreen(widget.data),
-                          //                   withNavBar: true, // OPTIONAL VALUE. True by default.
-                          //                   pageTransitionAnimation: PageTransitionAnimation.cupertino,
-                          //                 );
-                          //               },
-                          //               imagePath:
-                          //                   ImageConstant.imgDks3bvbvsaaus9p,
-                          //               height: getSize(190),
-                          //               width: getSize(190)),
-                          //           CustomImageView(
-                          //               onTap: (){
-                          //                 pushScreen(
-                          //                   context,
-                          //                   screen: ClickAfterSlectTabFurnitureScreen(widget.data),
-                          //                   withNavBar: true, // OPTIONAL VALUE. True by default.
-                          //                   pageTransitionAnimation: PageTransitionAnimation.cupertino,
-                          //                 );
-                          //               },
-                          //               imagePath:
-                          //                   ImageConstant.imgDks3bvbvsaaus9p,
-                          //               height: getSize(190),
-                          //               width: getSize(190),
-                          //               margin: getMargin(left: 15))
-                          //         ])),
-                          SizedBox(
-                            height: 20,
-                          ),
-                        ])),
+                                  //       // Get.toNamed(AppRoutes.clickAfterSlectTabFurnitureScreen);
+                                  //     }),
+                                  // // space them using a sized box
+                                  // SizedBox(
+                                  //   width: 15,
+                                  // ),
+                                  // CategoryCard(
+                                  //     title: 'Living',
+                                  //     previewImageAsset: ImageConstant.imgTvstand,
+                                  //     onTap: () {}),
+                                  // SizedBox(
+                                  //   width: 15,
+                                  // ),
+                                  // CategoryCard(
+                                  //     title: 'Bedroom',
+                                  //     previewImageAsset: ImageConstant.imgBed,
+                                  //     onTap: () {}),
+                                  // SizedBox(
+                                  //   width: 15,
+                                  // ),
+                                  // CategoryCard(
+                                  //     title: 'Kids Room',
+                                  //     previewImageAsset: ImageConstant.imgBabybed,
+                                  //     onTap: () {}),
+                                  // SizedBox(
+                                  //   width: 15,
+                                  // ),
+                                  // CategoryCard(
+                                  //     title: 'Mattresses',
+                                  //     previewImageAsset: ImageConstant.imgMattress,
+                                  //     onTap: () {}),
+                                  // SizedBox(
+                                  //   width: 15,
+                                  // ),
+                                  // CategoryCard(
+                                  //     title: 'Furnishings',
+                                  //     previewImageAsset: ImageConstant.imgCurtain,
+                                  //     onTap: () {}),
+                                  // SizedBox(
+                                  //   width: 15,
+                                  // ),
+                                  // CategoryCard(
+                                  //     title: 'Decor',
+                                  //     previewImageAsset: ImageConstant.imgSpiderplant,
+                                  //     onTap: () {}),
+                                  // SizedBox(
+                                  //   width: 15,
+                                  // ),
+                                  // CategoryCard(
+                                  //     title: 'Lighting',
+                                  //     previewImageAsset: 'assets/images/vector-cH4.png',
+                                  //     onTap: () {}),
+                                  // SizedBox(
+                                  //   width: 15,
+                                  // ),
+                                  // CategoryCard(
+                                  //     title: 'Appliances',
+                                  //     previewImageAsset: ImageConstant.imgMicrowave,
+                                  //     onTap: () {}),
+                                  // SizedBox(
+                                  //   width: 15,
+                                  // ),
+                                  // CategoryCard(
+                                  //     title: 'Modular Furniture',
+                                  //     previewImageAsset: ImageConstant.imgWardrobe,
+                                  //     onTap: () {}),
+                                  // SizedBox(
+                                  //   width: 15,
+                                  // ),
+                  
+                                  ),
+                            ),
+                            // Padding(
+                            //     padding: getPadding(left: 15, top: 22, right: 18),
+                            //     child: Row(
+                            //         mainAxisAlignment: MainAxisAlignment.center,
+                            //         children: [
+                            //           CustomImageView(
+                            //               onTap: (){
+                            //                 pushScreen(
+                            //                   context,
+                            //                   screen: ClickAfterSlectTabFurnitureScreen(widget.data),
+                            //                   withNavBar: true, // OPTIONAL VALUE. True by default.
+                            //                   pageTransitionAnimation: PageTransitionAnimation.cupertino,
+                            //                 );
+                            //               },
+                            //               imagePath:
+                            //                   ImageConstant.imgDks3bvbvsaaus9p,
+                            //               height: getSize(190),
+                            //               width: getSize(190)),
+                            //           CustomImageView(
+                            //               onTap: (){
+                            //                 pushScreen(
+                            //                   context,
+                            //                   screen: ClickAfterSlectTabFurnitureScreen(widget.data),
+                            //                   withNavBar: true, // OPTIONAL VALUE. True by default.
+                            //                   pageTransitionAnimation: PageTransitionAnimation.cupertino,
+                            //                 );
+                            //               },
+                            //               imagePath:
+                            //                   ImageConstant.imgDks3bvbvsaaus9p,
+                            //               height: getSize(190),
+                            //               width: getSize(190),
+                            //               margin: getMargin(left: 15))
+                            //         ])),
+                            SizedBox(
+                              height: 20,
+                            ),
+                          ])),
+                ),
                 Container(
                     height: getVerticalSize(300),
                     width: double.maxFinite,

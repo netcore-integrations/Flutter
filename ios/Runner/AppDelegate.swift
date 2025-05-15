@@ -8,18 +8,18 @@ import Firebase
 
 
 @main
-@objc class AppDelegate: FlutterAppDelegate, SmartechDelegate,HanselDeepLinkListener
+@objc class AppDelegate: FlutterAppDelegate, SmartechDelegate
                          //HanselActionListener
 {
 //    func onActionPerformed(action: String!) {
 //        <#code#>
 //    }
-    
-    private var flutterMethodChannel: FlutterMethodChannel?
-    
-    override func application(_ application: UIApplication,didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+
+    override func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-    
+
         print(launchOptions as Any)
         FirebaseApp.configure()
         GeneratedPluginRegistrant.register(with: self)
@@ -31,26 +31,28 @@ import Firebase
         Smartech.sharedInstance().trackAppInstallUpdateBySmartech()
         onClick()
 //        Hansel.registerHanselActionListener(action: String, listener: any HanselActionListener)
-        return super.application(application,didFinishLaunchingWithOptions: launchOptions)
+        return super.application(application,
+                                 didFinishLaunchingWithOptions: launchOptions)
+        //      return true
     }
-    
+
     override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        
+
         Messaging.messaging().apnsToken = deviceToken
         SmartPush.sharedInstance().didRegisterForRemoteNotifications(withDeviceToken: deviceToken)
-        
+
     }
-    
+
     override func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
         SmartPush.sharedInstance().didFailToRegisterForRemoteNotificationsWithError(error)
     }
-    
+
     //MARK:- UNUserNotificationCenterDelegate Methods
     override func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         SmartPush.sharedInstance().willPresentForegroundNotification(notification)
         completionHandler([.alert, .badge, .sound])
     }
-    
+
     override func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         // MARK: Adding the delay of 5ms in didReceive response class will give the pn_clicked event in Terminated state also. Replace existing code with the below lines.
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Double(0.5 * Double(NSEC_PER_SEC)) / Double(NSEC_PER_SEC), execute: {
@@ -58,14 +60,15 @@ import Firebase
                     completionHandler()
                 })
     }
-    
+
     func handleDeeplinkAction(withURLString deeplinkURLString: String, andNotificationPayload notificationPayload: [AnyHashable : Any]?) {
-        
+
+//    fabfurni://productPage//, http, https
         NSLog("SMTL deeplink Native---> \(deeplinkURLString)")
-   
+
         SmartechBasePlugin.handleDeeplinkAction(deeplinkURLString, andCustomPayload: notificationPayload)
     }
-    
+
      override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
           var handleBySmartech = Smartech.sharedInstance().application(app, open: url, options: options);
         if(!handleBySmartech) {
@@ -74,7 +77,7 @@ import Firebase
         return true;
     }
      func onLaunchURL(URLString: String!) {
-       
+
        }
 
          func onClick() {
@@ -131,5 +134,5 @@ import Firebase
 
 //        return responseValue
          }
-    
+
 }

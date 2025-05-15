@@ -961,10 +961,10 @@ packages:
     dependency: "direct main"
     description:
       name: persistent_bottom_nav_bar_v2
-      sha256: fcbb84757e598791b15321a314604e74719d098c51891b4c7555ae1dd901f582
+      sha256: dec5caf611ff06af16cf9536b9a99172c2f5441156f50b8061ca8643a5808a6b
       url: "https://pub.dev"
     source: hosted
-    version: "5.3.1"
+    version: "5.4.0"
   petitparser:
     dependency: transitive
     description:
@@ -1118,10 +1118,10 @@ packages:
     dependency: "direct main"
     description:
       name: smartech_nudges
-      sha256: df0b4a80507e5ffcc70bf07ca7373893d5a202a302adcf9fe5bef3ac12b1e031
+      sha256: c5fa30167a1f3dab82a2b6cf2ba70d3c443c240ef746d0151e08be1da6f06555
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.9"
+    version: "1.2.0"
   smartech_push:
     dependency: "direct main"
     description:

@@ -29,7 +29,7 @@ dependencies:
   smooth_page_indicator: ^1.0.0+2
   webview_flutter: ^4.2.2
   #  url_launcher: ^6.1.11
-  persistent_bottom_nav_bar_v2: ^5.3.1
+  persistent_bottom_nav_bar_v2: ^5.4.0
   #  carousel_pro:
   sizer: ^3.0.3
   light_modal_bottom_sheet: ^0.0.5
@@ -40,7 +40,7 @@ dependencies:
   firebase_messaging: ^15.1.2
   smartech_base:
   smartech_push:
-  smartech_nudges:
+  smartech_nudges: ^1.2.0
   smartech_appinbox:
   video_player: ^2.6.1
   chewie: ^1.9.0
