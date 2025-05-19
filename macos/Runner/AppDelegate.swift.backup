@@ -1,0 +1,187 @@
+import Cocoa
+import FlutterMacOS
+
+@main
+class AppDelegate: FlutterAppDelegate, UNUserNotificationCenterDelegate {
+      // SMARTECH_UNCENTERDELEGATE_BY_SCRIPT
+  override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+    return true
+  }
+
+  override func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
+    return true
+  }
+
+  func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+      // SMARTECH: Handle device token registration // SMARTECH_DID_REGISTER_TOKEN_BY_SCRIPT
+      SmartPush.sharedInstance().didRegisterForRemoteNotifications(withDeviceToken: deviceToken)
+  }
+
+
+
+func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+
+    // SMARTECH: Handle registration failure // SMARTECH_DID_FAIL_REGISTER_BY_SCRIPT
+
+    SmartPush.sharedInstance().didFailToRegisterForRemoteNotificationsWithError(error)
+
+    print("Failed to register for remote notifications: \(error.localizedDescription)") // Add standard logging
+
+}
+
+
+
+// MARK: - UNUserNotificationCenterDelegate Methods
+
+func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) { // SMARTECH_WILL_PRESENT_BY_SCRIPT
+
+    // SMARTECH: Handle foreground notification presentation
+
+    SmartPush.sharedInstance().willPresentForegroundNotification(notification)
+
+    // Decide how to present the notification to the user. Add [.list, .banner] for iOS 14+
+
+    completionHandler([.alert, .sound])
+
+}
+
+
+
+func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+
+    // SMARTECH: Handle notification response // SMARTECH_DID_RECEIVE_BY_SCRIPT
+
+    SmartPush.sharedInstance().didReceive(response)
+
+    // Add any custom handling based on response.actionIdentifier etc.
+
+    completionHandler()
+
+}
+
+
+
+func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+
+        let handleBySmartech = Smartech.sharedInstance().application(app, open: url, options: options) // SMARTECH_OPEN_URL_BY_SCRIPT_START
+
+        if !handleBySmartech {
+
+            // Add any custom URL handling logic here if needed
+
+        }
+
+        return true // Or return handleBySmartech if custom logic might return false
+
+}
+
+
+
+// MARK: - Smartech Deeplink Handling
+
+func handleDeeplinkAction(withURLString deeplinkURLString: String, andNotificationPayload notificationPayload: [AnyHashable : Any]?) { // SMARTECH_DEEPLINK_HANDLER_BY_SCRIPT // SMARTECH_DEEPLINK_HANDLER_BY_SCRIPT
+
+    // This function can be called from didReceive Notification Response or openURL
+
+    print("Smartech: Handling deeplink: \(deeplinkURLString)")
+
+    // SmartechBasePlugin is typically for Cordova/React Native. Use direct SDK call for native:
+
+    // Smartech.sharedInstance().handleDeeplink(with: url, andCustomPayload: notificationPayload) // Adjust based on actual SDK method
+
+    // OR if SmartechBasePlugin is intended (e.g. for hybrid apps using native delegate):
+
+    // SmartechBasePlugin.handleDeeplinkAction(deeplinkURLString, andCustomPayload: notificationPayload)
+
+}
+
+
+    override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        // // SMARTECH_DID_REGISTER_TOKEN_BY_SCRIPT
+        SmartPush.sharedInstance().didRegisterForRemoteNotifications(withDeviceToken: deviceToken)
+    }
+
+
+    override func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        // // SMARTECH_DID_FAIL_REGISTER_BY_SCRIPT
+        SmartPush.sharedInstance().didFailToRegisterForRemoteNotificationsWithError(error)
+        print("Failed to register for remote notifications: \(error.localizedDescription)")
+    }
+
+
+    override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        // // SMARTECH_DID_REGISTER_TOKEN_BY_SCRIPT
+        SmartPush.sharedInstance().didRegisterForRemoteNotifications(withDeviceToken: deviceToken)
+    }
+
+
+    override func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        // // SMARTECH_DID_FAIL_REGISTER_BY_SCRIPT
+        SmartPush.sharedInstance().didFailToRegisterForRemoteNotificationsWithError(error)
+        print("Failed to register for remote notifications: \(error.localizedDescription)")
+    }
+
+
+    override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        // // SMARTECH_DID_REGISTER_TOKEN_BY_SCRIPT
+        SmartPush.sharedInstance().didRegisterForRemoteNotifications(withDeviceToken: deviceToken)
+    }
+
+    override func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        // // SMARTECH_DID_FAIL_REGISTER_BY_SCRIPT
+        SmartPush.sharedInstance().didFailToRegisterForRemoteNotificationsWithError(error)
+        print("Failed to register for remote notifications: \(error.localizedDescription)")
+    }
+}
+    SmartPush.sharedInstance().didRegisterForRemoteNotifications(withDeviceToken: deviceToken)
+    // SMARTECH: Handle device token registration
+func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+
+}
+    print("Failed to register for remote notifications: \(error.localizedDescription)") // Add standard logging
+    SmartPush.sharedInstance().didFailToRegisterForRemoteNotificationsWithError(error)
+    // SMARTECH: Handle registration failure
+func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+
+}
+    completionHandler([.alert, .sound])
+    // Decide how to present the notification to the user. Add [.list, .banner] for iOS 14+
+    SmartPush.sharedInstance().willPresentForegroundNotification(notification)
+    // SMARTECH: Handle foreground notification presentation
+func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+// MARK: - UNUserNotificationCenterDelegate Methods
+
+}
+    completionHandler()
+    // Add any custom handling based on response.actionIdentifier etc.
+    SmartPush.sharedInstance().didReceive(response)
+    // SMARTECH: Handle notification response
+func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+
+}
+    SmartPush.sharedInstance().didRegisterForRemoteNotifications(withDeviceToken: deviceToken)
+    // SMARTECH: Handle device token registration
+func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+
+}
+    print("Failed to register for remote notifications: \(error.localizedDescription)") // Add standard logging
+    SmartPush.sharedInstance().didFailToRegisterForRemoteNotificationsWithError(error)
+    // SMARTECH: Handle registration failure
+func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+
+}
+    completionHandler([.alert, .sound])
+    // Decide how to present the notification to the user. Add [.list, .banner] for iOS 14+
+    SmartPush.sharedInstance().willPresentForegroundNotification(notification)
+    // SMARTECH: Handle foreground notification presentation
+func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+// MARK: - UNUserNotificationCenterDelegate Methods
+
+}
+    completionHandler()
+    // Add any custom handling based on response.actionIdentifier etc.
+    SmartPush.sharedInstance().didReceive(response)
+    // SMARTECH: Handle notification response
+func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+
+}

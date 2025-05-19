@@ -18,6 +18,7 @@ import 'package:keshav_s_application2/core/app_export.dart';
 import '../presentation/need_help/NeedHelp.dart';
 import 'InAppWebview.dart';
 import 'StoreScreen1.dart';
+import 'Website.dart';
 import 'offersscreen1.dart';
 
 // ignore_for_file: must_be_immutable
@@ -285,6 +286,32 @@ class _SidebarMenuState extends State<SidebarMenu> {
                                       print('test');
                                     },
                                   ),
+
+                                ],
+                              )),
+                        ),
+
+                        InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => Website(),
+                            ));
+                          },
+                          child: Container(
+                              width: 75.w,
+                              padding: getPadding(
+                                  left: 18, right: 24, top: 10, bottom: 10),
+                              child: Row(
+                                children: [
+                                  Text("Website",
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.left,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontFamily: 'Roboto',
+                                        fontWeight: FontWeight.w400,
+                                        color: ColorConstant.black900,
+                                      )),
 
                                 ],
                               )),
