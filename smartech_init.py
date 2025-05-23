@@ -856,6 +856,8 @@ def add_extension_target(project_path, target_name, info_plist, entitlements)
     target.build_configurations.each do |config|
       config.build_settings['INFOPLIST_FILE'] = info_plist
       config.build_settings['CODE_SIGN_ENTITLEMENTS'] = entitlements if entitlements && !entitlements.empty?
+      config.build_settings['PRODUCT_NAME'] = target_name
+      config.build_settings['SWIFT_VERSION'] = '5.0' # <-- Add this line
     end
     # Add folder reference (yellow folder) at root
     add_folder_reference(project, target_name)
@@ -916,14 +918,16 @@ def add_extension_target_to_xcodeproj(xcodeproj_path, extension_name, sources, i
     # Set Info.plist
     rel_info_plist_path = os.path.relpath(info_plist_path, os.path.dirname(xcodeproj_path))
     project.add_build_setting('INFOPLIST_FILE', rel_info_plist_path, target=target)
+    # Set unique PRODUCT_NAME for each extension
+    project.add_build_setting('PRODUCT_NAME', extension_name, target=target)  # <-- Add this line
+    # Set SWIFT_VERSION for each extension
+    project.add_build_setting('SWIFT_VERSION', '5.0', target=target)  # <-- Add this line
     # Save project
     project.save()
     print(f"✅ Added {extension_name} as a target to your Xcode project.")
 
 def main():
     print("Starting Smartech/Hansel project configuration script...")
-    current_date_str = "May 19, 2025"
-    print(f"Current date: {current_date_str}")
 
     # Ask for app type and set use_override flag
     app_type = ask_app_type()
