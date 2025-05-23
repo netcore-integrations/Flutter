@@ -65,10 +65,10 @@ import smartech_base
     ) {
         
         // MARK: Adding the delay of 5ms in didReceive response class will give the pn_clicked event in Terminated state also. Replace existing code with the below lines.
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Double(0.5 * Double(NSEC_PER_SEC))/ Double(NSEC_PER_SEC),execute: {
-                SmartPush.sharedInstance().didReceive(response)
-                completionHandler()
-            })
+       DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            SmartPush.sharedInstance().didReceive(response)
+            completionHandler()
+        }
     }
 
     override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]
