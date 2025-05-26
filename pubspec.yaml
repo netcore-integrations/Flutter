@@ -29,7 +29,7 @@ dependencies:
   smooth_page_indicator: ^1.0.0+2
   webview_flutter: ^4.2.2
   #  url_launcher: ^6.1.11
-  persistent_bottom_nav_bar_v2: ^5.4.0
+  persistent_bottom_nav_bar_v2: ^6.0.1
   #  carousel_pro:
   sizer: ^3.0.3
   light_modal_bottom_sheet: ^0.0.5
@@ -46,12 +46,12 @@ dependencies:
   chewie: ^1.9.0
   custom_pop_up_menu: ^1.2.4
   visibility_detector: ^0.4.0+2
-  just_audio: ^0.9.42
+  just_audio: ^0.10.3
   url_launcher: ^6.1.11
   #  flutter_web_browser:
   location:
   gtm: ^1.0.0
-  flutter_widget_from_html_core: ^0.15.1
+  flutter_widget_from_html_core: ^0.16.0
   app_links: ^6.3.2
   flutter_inappwebview: ^6.1.5
   permission_handler:

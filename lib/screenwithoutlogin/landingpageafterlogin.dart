@@ -102,7 +102,6 @@ class _landingpageafterloginState extends State<landingpageafterlogin> {
   Widget build(BuildContext context) {
     return PersistentTabView(
 
-      onWillPop: _onWillPop,
       tabs: [
         PersistentTabConfig(
           screen: HomeScreen1(),

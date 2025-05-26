@@ -152,7 +152,7 @@ PODS:
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
-  - Smartech-iOS-SDK (3.6.1)
+  - Smartech-iOS-SDK (3.6.2)
   - smartech_appinbox (1.0.0):
     - Flutter
     - Smartech-iOS-SDK
@@ -167,11 +167,11 @@ PODS:
   - smartech_push (1.0.0):
     - Flutter
     - SmartPush-iOS-SDK
-  - SmartechAppInbox-iOS-SDK (3.5.7)
+  - SmartechAppInbox-iOS-SDK (3.5.8)
   - SmartechNudges (9.0.21):
     - Smartech-iOS-SDK (>= 3.6.0)
-  - SmartPush-iOS-SDK (3.5.5):
-    - Smartech-iOS-SDK (>= 3.5.5)
+  - SmartPush-iOS-SDK (3.5.6):
+    - Smartech-iOS-SDK (>= 3.6.2)
   - sqflite_darwin (0.0.4):
     - Flutter
     - FlutterMacOS
@@ -329,14 +329,14 @@ SPEC CHECKSUMS:
   razorpay-pod: cb5b5439697bdda9c57d68a92b3e5b0ce1d2f2f3
   razorpay_flutter: 0e98e4fcaae27ad50e011d85f66d85e0a008754a
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
-  Smartech-iOS-SDK: 0f27fd9631315221350c3730fa994868c32e6490
+  Smartech-iOS-SDK: 3f43f4f808f1e303278adf2675ecd9a9ec0b07ec
   smartech_appinbox: eca08565a6fa37e384a54dff4b063d49a63657ad
   smartech_base: f24a62060405604f108f2e06dea603e573a09b21
   smartech_nudges: 849f26b409e8473ca3573f0f5485bd4111117129
   smartech_push: bd907255309b5aa88a4a1df794e0869a5c46c99d
-  SmartechAppInbox-iOS-SDK: 7b02d8beaf66dd5d0620705580598bfc00bc0af0
+  SmartechAppInbox-iOS-SDK: dac5b4253b68bb04b9efb62d66ae03314ba3b66a
   SmartechNudges: 568843b16a7189fc9a2c3a867d0618bd74f5fd63
-  SmartPush-iOS-SDK: e5f21bbd7aae14a7e49e03bf1223220146bf3fa6
+  SmartPush-iOS-SDK: e00deb9c932b36bd10e25fe090544949a88f87e7
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
   video_player_avfoundation: 2cef49524dd1f16c5300b9cd6efd9611ce03639b
