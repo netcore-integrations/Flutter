@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:developer';
 import 'package:custom_pop_up_menu/custom_pop_up_menu.dart';
@@ -45,9 +44,8 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
     initialApiCall();
     getMessagesList();
     Timer(Duration(seconds: 2), () {
-      Smartech().trackEvent("app_inbox_screen", {"login":"no"});
+      Smartech().trackEvent("app_inbox_screen", {"login": "no"});
     });
-
   }
 
   @override
@@ -133,13 +131,13 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
         inboxList.addAll(value);
         for (int i = 0; i < inboxList.length; i++) {
           String status = inboxList[i].smtPayload!.status.toLowerCase();
-          print(status);
+          print("************status:" + status);
           //this one for unread messages
-          if(status=='delivered' || status =='sent'){
-            newinboxList.add(inboxList[i]);
-          }
+          // if (status == 'delivered' || status == 'viewed') {
+          //   newinboxList.add(inboxList[i]);
+          // }
           //this one for read messages
-          if (status == 'viewed' || status == 'clicked') {
+          if (status == 'clicked') {
             newinboxList.add(inboxList[i]);
             print("new message: " + newinboxList[i].smtPayload!.status);
             // print("new message: " + inboxList[i].smtPayload!.status);
@@ -167,9 +165,9 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
   getMessagesList() async {
     // inboxList = [];
     await SmartechAppinbox().getAppInboxMessages().then((value) {
-      log("*****************");
-      log(value!.first.smtPayload!.status.toString());
-      log("*****************");
+      // log("*****************");
+      // log(value!.first.smtPayload!.status.toString());
+      // log("*****************");
       // if (value != null) {
       //   inboxList.addAll(value);
       // }
@@ -194,7 +192,6 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
         .then((value) {
       print("getMessageListByApiCall: " + value.toString());
 
-      
       setState(() {});
     });
   }
@@ -207,13 +204,14 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
       (value) {
         // inbox_count=int.tryParse(value.toString() ?? "");
         // print("inbox_count: "+inbox_count);
-        print("************"+value.toString());
+        // print("************" + value.toString());
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    List<String> statuses = ['delivered', 'sent', 'viewed', 'clicked'];
     return Scaffold(
       appBar: AppBar(
         leading: InkWell(
@@ -288,7 +286,7 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
                     child: ListView.builder(
                       itemCount: newinboxList.length,
                       itemBuilder: (BuildContext context, int index) {
-                        print("New Length: "+ newinboxList.length.toString());
+                        print("New Length: " + newinboxList.length.toString());
                         switch (newinboxList[index].smtPayload!.type) {
                           // ******* Image type Notifications ******* \\
                           case SMTNotificationType.image:
@@ -330,7 +328,9 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
                                 child: InkWell(
                                   onTap: () {
                                     markMessageAsClicked(
-                                        newinboxList[index].smtPayload!.deeplink,
+                                        newinboxList[index]
+                                            .smtPayload!
+                                            .deeplink,
                                         newinboxList[index].smtPayload!.trid);
                                   },
                                   child: SMTImageNotificationView(
@@ -551,22 +551,22 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
                                     info.visibleFraction * 100;
                                 // log('Widget ${inboxList[index].trid} is ${visiblePercentage}% visible');
                                 if (visiblePercentage == 100 &&
-                                    inboxList[index]
+                                    newinboxList[index]
                                             .smtPayload!
                                             .status
                                             .toLowerCase() !=
                                         "viewed") {
                                   markMessageAsViewed(
-                                      inboxList[index].smtPayload!.trid);
+                                      newinboxList[index].smtPayload!.trid);
                                   return;
                                 }
                               },
                               child: Dismissible(
-                                key: Key(inboxList[index].smtPayload!.trid),
+                                key: Key(newinboxList[index].smtPayload!.trid),
                                 onDismissed: (direction) async {
                                   await markMessageAsDismissed(
-                                      inboxList[index].smtPayload!.trid);
-                                  await inboxList.removeAt(index);
+                                      newinboxList[index].smtPayload!.trid);
+                                  await newinboxList.removeAt(index);
                                   await getCategoryList();
                                   setState(() {});
                                 },
@@ -582,11 +582,13 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
                                 child: InkWell(
                                   onTap: () {
                                     markMessageAsClicked(
-                                        inboxList[index].smtPayload!.deeplink,
-                                        inboxList[index].smtPayload!.trid);
+                                        newinboxList[index]
+                                            .smtPayload!
+                                            .deeplink,
+                                        newinboxList[index].smtPayload!.trid);
                                   },
                                   child: SMTSimpleNotificationView(
-                                    inbox: inboxList[index].smtPayload!,
+                                    inbox: newinboxList[index].smtPayload!,
                                   ),
                                 ),
                               ),
