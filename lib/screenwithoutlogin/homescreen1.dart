@@ -241,6 +241,7 @@ class _HomeScreen1State extends State<HomeScreen1> {
         child: Scaffold(
             key: _scaffoldKey,
             backgroundColor: ColorConstant.purple50,
+            // endDrawer:SidebarMenu(inbox_count) ,
             drawer: SidebarMenu(inbox_count),
             appBar: CustomAppBar(
                 height: getVerticalSize(90),
