@@ -4,6 +4,7 @@ import glob
 import sys
 import re
 import subprocess
+import shutil
 
 EXCLUDE_DIRS = ['/build/', '/Pods/', '/DerivedData/', '/.git/', '/Carthage/', '/Vendor/', '/Frameworks/']
 DEFAULT_INDENT = "    "
@@ -101,8 +102,8 @@ def find_app_delegate_details(exclusions):
     print("\n--- Searching for App Entry Point (AppDelegate/SwiftUI App) ---")
     app_delegate_info = None
     try:
-        swift_delegate_files = filter_paths(glob.glob('./**/AppDelegate.swift', recursive=True), exclusions)
-        objc_delegate_files = filter_paths(glob.glob('./**/AppDelegate.m', recursive=True), exclusions)
+        swift_delegate_files = filter_paths(glob.glob('./ios/**/AppDelegate.swift', recursive=True), exclusions)
+        objc_delegate_files = filter_paths(glob.glob('./ios/**/AppDelegate.m', recursive=True), exclusions)
         potential_delegates = []
         if swift_delegate_files:
             potential_delegates.extend([{'path': p, 'name': 'AppDelegate', 'language': 'swift'} for p in swift_delegate_files])
@@ -122,7 +123,7 @@ def find_app_delegate_details(exclusions):
         return {'error': "Python 3.5+ Required"}
     if not app_delegate_info:
         try:
-            swift_files = filter_paths(glob.glob('./**/*.swift', recursive=True), exclusions)
+            swift_files = filter_paths(glob.glob('./ios/**/*.swift', recursive=True), exclusions)
             swiftui_app_regex = re.compile(r"@main\s+(?:public\s+)?struct\s+([\w]+)\s*:\s*App")
             for file_path in swift_files:
                 try:
@@ -789,6 +790,73 @@ class NotificationService: UNNotificationServiceExtension {
 # --- Add this import for pbxproj ---
 from pbxproj import XcodeProject
 
+def write_ensure_capabilities_ruby_script(script_path):
+    ruby_code = """
+require 'xcodeproj'
+require 'plist'
+
+def ensure_entitlements_file(target, project_dir)
+  entitlements_path = nil
+  target.build_configurations.each do |config|
+    entitlements = config.build_settings['CODE_SIGN_ENTITLEMENTS']
+    if entitlements
+      entitlements_path = File.join(project_dir, entitlements)
+      break
+    end
+  end
+  unless entitlements_path
+    entitlements_path = File.join(project_dir, "App.entitlements")
+    target.build_configurations.each do |config|
+      config.build_settings['CODE_SIGN_ENTITLEMENTS'] = File.basename(entitlements_path)
+    end
+    puts "Created entitlements file: #{entitlements_path}"
+  end
+  entitlements_path
+end
+
+def ensure_capabilities(xcodeproj_path, app_group_id)
+  project = Xcodeproj::Project.open(xcodeproj_path)
+  main_target = project.targets.find { |t| t.symbol_type == :application }
+  unless main_target
+    puts "❌ Could not find main app target."
+    exit 1
+  end
+
+  project_dir = File.dirname(xcodeproj_path)
+  entitlements_path = ensure_entitlements_file(main_target, project_dir)
+
+  entitlements = File.exist?(entitlements_path) ? Plist.parse_xml(entitlements_path) : {}
+
+  # App Groups
+  app_groups = entitlements["com.apple.security.application-groups"] || []
+  unless app_groups.include?(app_group_id)
+    app_groups << app_group_id
+    entitlements["com.apple.security.application-groups"] = app_groups
+    puts "✅ Added App Group '#{app_group_id}' to entitlements."
+  end
+
+  # Save entitlements
+  File.open(entitlements_path, "wb") { |f| f.write(entitlements.to_plist) }
+
+  # Push Notifications: No entitlements key needed, just a reminder
+  puts "✅ Ensure Push Notifications capability is enabled in Xcode (no entitlements key needed)."
+
+  project.save
+end
+
+if ARGV.length < 2
+  puts "Usage: ruby ensure_capabilities.rb <xcodeproj_path> <app_group_id>"
+  exit 1
+end
+
+xcodeproj_path = ARGV[0]
+app_group_id = ARGV[1]
+
+ensure_capabilities(xcodeproj_path, app_group_id)
+"""
+    with open(script_path, "w") as f:
+        f.write(ruby_code)
+
 def write_ruby_add_target_script(script_path):
     ruby_code = """
 require 'xcodeproj'
@@ -926,12 +994,50 @@ def add_extension_target_to_xcodeproj(xcodeproj_path, extension_name, sources, i
     project.save()
     print(f"✅ Added {extension_name} as a target to your Xcode project.")
 
+def ensure_podfile_exists_and_install(ios_project_path):
+    podfile_path = os.path.join(ios_project_path, "Podfile")
+    if not os.path.exists(podfile_path):
+        print(f"Podfile not found at {podfile_path}. Running 'pod init'...")
+        # Remove any Podfile.lock or Pods directory to avoid conflicts
+        podfile_lock = os.path.join(ios_project_path, "Podfile.lock")
+        pods_dir = os.path.join(ios_project_path, "Pods")
+        if os.path.exists(podfile_lock):
+            os.remove(podfile_lock)
+        if os.path.exists(pods_dir):
+            shutil.rmtree(pods_dir)
+        # Run pod init
+        result = subprocess.run(["pod", "init"], cwd=ios_project_path)
+        if result.returncode != 0:
+            print("❌ Failed to run 'pod init'. Please ensure CocoaPods is installed.")
+            sys.exit(1)
+        print("✅ Podfile created.")
+    else:
+        print("Podfile already exists.")
+    # Always run pod install to ensure workspace is set up
+    print("Running 'pod install'...")
+    result = subprocess.run(["pod", "install"], cwd=ios_project_path)
+    if result.returncode != 0:
+        print("❌ Failed to run 'pod install'. Please check your Podfile and CocoaPods setup.")
+        sys.exit(1)
+    print("✅ 'pod install' completed.")
+
+def get_url_scheme_from_user():
+    print("\n--- URL Scheme Configuration ---")
+    while True:
+        url_scheme = input("Enter a custom URL scheme for your app (e.g., myapp): ").strip()
+        if url_scheme:
+            return url_scheme
+        print("  URL scheme cannot be empty.")
+
 def main():
     print("Starting Smartech/Hansel project configuration script...")
 
     # Ask for app type and set use_override flag
     app_type = ask_app_type()
     use_override = (app_type == 2)  # True for Flutter, False otherwise
+
+    ios_project_path = os.path.join(os.getcwd(), "ios")
+    ensure_podfile_exists_and_install(ios_project_path)
 
     plist_path = find_info_plist(EXCLUDE_DIRS)
     app_delegate_details_dict = find_app_delegate_details(EXCLUDE_DIRS)
@@ -961,13 +1067,37 @@ def main():
     if user_opted_for_hansel and not hansel_user_data:
          print("\nWarning: Hansel SDK opted-in, but keys were not provided. Hansel setup will be skipped.")
          user_opted_for_hansel = False
-    print(f"\n--- Modifying Info.plist: {plist_path} ---")
+
+    # --- Ask for URL scheme after Hansel keys ---
+    url_scheme = get_url_scheme_from_user()
+
+    # --- Ensure main target capabilities using Ruby script ---
+    xcodeproj_name = find_xcodeproj_name(ios_project_path)
+    if xcodeproj_name:
+        xcodeproj_path = os.path.join(ios_project_path, xcodeproj_name)
+        enable_location = smartech_user_data.get("SmartechAutoFetchLocation", False)
+        # Before calling ensure_capabilities_with_ruby(...)
+        ensure_capabilities_rb_path = os.path.join("ios", "ensure_capabilities.rb")
+        if not os.path.exists(ensure_capabilities_rb_path):
+            write_ensure_capabilities_ruby_script(ensure_capabilities_rb_path)
+
+        # Now safe to call
+        ensure_capabilities_with_ruby(
+            xcodeproj_path,
+            smartech_user_data["SmartechAppGroup"],  # This should be the real app group, not the extension name
+            enable_location
+        )
+    else:
+        print("⚠️  Could not detect an .xcodeproj in the ios directory for capability checks.")
+
+    # --- Modifying Info.plist: {plist_path} ---
     backup_plist_path = plist_path + '.backup'
     plist_modified = False
     try:
         print(f"Backing up Info.plist to {backup_plist_path}")
         os.makedirs(os.path.dirname(backup_plist_path), exist_ok=True)
-        with open(plist_path, 'rb') as f_read, open(backup_plist_path, 'wb') as f_write: f_write.write(f_read.read())
+        with open(plist_path, 'rb') as f_read, open(backup_plist_path, 'wb') as f_write:
+            f_write.write(f_read.read())
         with open(plist_path, 'rb') as fp:
             try: plist_data = plistlib.load(fp)
             except Exception as e: print(f"Error: Failed to parse Info.plist. Error: {e}"); raise
@@ -981,6 +1111,24 @@ def main():
         elif not user_opted_for_hansel and 'HanselKeys' in plist_data:
             del plist_data['HanselKeys']
             keys_added_or_updated_plist.append("HanselKeys (Removed)"); plist_modified = True
+
+        # --- Add or update URL scheme ---
+        if url_scheme:
+            url_types = plist_data.get('CFBundleURLTypes', [])
+            # Check if the scheme already exists
+            scheme_exists = any(
+                url_type.get('CFBundleURLSchemes') and url_scheme in url_type['CFBundleURLSchemes']
+                for url_type in url_types
+            )
+            if not scheme_exists:
+                url_types.append({
+                    'CFBundleURLName': url_scheme,
+                    'CFBundleURLSchemes': [url_scheme]
+                })
+                plist_data['CFBundleURLTypes'] = url_types
+                keys_added_or_updated_plist.append("CFBundleURLTypes (added/updated)")
+                plist_modified = True
+
         if plist_modified:
             with open(plist_path, 'wb') as fp:
                 plistlib.dump(plist_data, fp, fmt=plistlib.FMT_XML if sys.version_info >= (3, 4) else None)
@@ -989,6 +1137,7 @@ def main():
             print("Info.plist already contains the necessary SDK key configurations or no changes were opted for.")
     except Exception as e:
         print(f"Error modifying Info.plist: {e}"); sys.exit(1)
+
     appdelegate_modified_flag = False
     if app_delegate_file_path and app_delegate_language in ['swift', 'objc']:
         appdelegate_modified_flag = modify_app_delegate(
@@ -1057,6 +1206,15 @@ def main():
     podfile_path = os.path.join(ios_project_path, "Podfile")
     is_flutter = (app_type == 2)
     ensure_smartech_extension_targets_in_podfile(podfile_path, is_flutter)
+    
+def ensure_capabilities_with_ruby(xcodeproj_path, app_group_id):
+    ruby_script = "ensure_capabilities.rb"
+    subprocess.run([
+        "ruby", ruby_script,
+        os.path.basename(xcodeproj_path),
+        app_group_id
+    ], check=True, cwd="ios")
+
 def ensure_smartech_extension_targets_in_podfile(podfile_path, is_flutter):
     try:
         with open(podfile_path, 'r', encoding='utf-8') as f:
@@ -1073,35 +1231,32 @@ def ensure_smartech_extension_targets_in_podfile(podfile_path, is_flutter):
         flags=re.DOTALL
     )
 
-    # Compose the extension blocks
-    use_fw = "  use_frameworks!\n\n" if is_flutter else ""
+    use_fw = "  use_frameworks!\n" if is_flutter else ""
     nse_block = (
         "#service extension target\n"
         "target 'SmartechNSE' do\n"
+        "  inherit! :search_paths\n"
         f"{use_fw}"
-        "  # Pods for 'YourServiceExtensionTarget'\n"
         "  pod 'SmartPush-iOS-SDK'\n"
         "end\n\n"
     )
     nce_block = (
         "#content extension target\n"
         "target 'SmartechNCE' do\n"
+        "  inherit! :search_paths\n"
         f"{use_fw}"
-        "  # Pods for 'YourContentExtensionTarget'\n"
         "  pod 'SmartPush-iOS-SDK'\n"
         "end\n"
     )
 
-    # Ensure a newline at the end of the Podfile
     if not content.endswith('\n'):
         content += '\n'
 
-    # Append the extension targets at the very end
     content += nse_block + nce_block
 
     with open(podfile_path, 'w', encoding='utf-8') as f:
         f.write(content)
-    print("✅ SmartechNSE and SmartechNCE targets ensured in Podfile.")
+    print("✅ SmartechNSE and SmartechNCE targets ensured in Podfile")
 
 def ask_app_type():
     print("\nWhat type of app are you integrating Smartech with?")
@@ -1120,3 +1275,7 @@ def ask_app_type():
 # --- Execute the main routine ---
 if __name__ == "__main__":
     main()
+
+
+
+
