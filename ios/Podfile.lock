@@ -145,7 +145,7 @@ PODS:
   - permission_handler_apple (9.3.0):
     - Flutter
   - PromisesObjC (2.4.0)
-  - razorpay-pod (1.4.0)
+  - razorpay-pod (1.4.1)
   - razorpay_flutter (1.1.10):
     - Flutter
     - razorpay-pod
@@ -210,7 +210,7 @@ DEPENDENCIES:
   - smartech_base (from `.symlinks/plugins/smartech_base/ios`)
   - smartech_nudges (from `.symlinks/plugins/smartech_nudges/ios`)
   - smartech_push (from `.symlinks/plugins/smartech_push/ios`)
-  - SmartPush-iOS-SDK (~> 3.5.5)
+  - SmartPush-iOS-SDK
   - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
   - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/darwin`)
@@ -326,7 +326,7 @@ SPEC CHECKSUMS:
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
-  razorpay-pod: cb5b5439697bdda9c57d68a92b3e5b0ce1d2f2f3
+  razorpay-pod: 2a11c008f40a91d5565a1a2dc6872d50c5b30939
   razorpay_flutter: 0e98e4fcaae27ad50e011d85f66d85e0a008754a
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
   Smartech-iOS-SDK: 3f43f4f808f1e303278adf2675ecd9a9ec0b07ec
@@ -343,6 +343,6 @@ SPEC CHECKSUMS:
   wakelock_plus: e29112ab3ef0b318e58cfa5c32326458be66b556
   webview_flutter_wkwebview: 1821ceac936eba6f7984d89a9f3bcb4dea99ebb2
 
-PODFILE CHECKSUM: bb8d95d71b379217c9fe2f7cab596cc25534294d
+PODFILE CHECKSUM: 36223657d966ef9a5671e9e3feb5e18a35112e0d
 
 COCOAPODS: 1.16.2

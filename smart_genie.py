@@ -1,3 +1,36 @@
+import sys
+import subprocess
+import os
+
+# --- Ensure Python 3 is installed ---
+def ensure_python3():
+    # If running with Python 2, abort
+    if sys.version_info < (3, 0):
+        print("❌ Python 3 is required to run this script.")
+        sys.exit(1)
+    # Check if python3 is available (for subprocesses)
+    try:
+        subprocess.run(["python3", "--version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        print("Python 3 is not installed or not available on PATH. Attempting to install via Homebrew...")
+        # Check if Homebrew is installed
+        try:
+            subprocess.run(["brew", "--version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            print("Homebrew is not installed. Please install Homebrew first from https://brew.sh/")
+            sys.exit(1)
+        # Install python3
+        result = subprocess.run(["brew", "install", "python"], check=False)
+        if result.returncode != 0:
+            print("❌ Failed to install Python 3 via Homebrew. Please install it manually and re-run the script.")
+            sys.exit(1)
+        print("✅ Python 3 installed successfully. Please re-run the script.")
+        sys.exit(0)
+
+ensure_python3()
+
+
+
 import plistlib
 import os
 import glob
@@ -418,133 +451,133 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
         with open(app_delegate_file_path, 'r', encoding='utf-8') as file:
             lines = file.readlines()
         methods_to_process = [
-            {
-                'name': 'didFinishLaunchingWithOptions',
-                'swift_patterns': [
-                    r"func\s+application\s*\(\s*_?\s*application:\s*UIApplication\s*,\s*didFinishLaunchingWithOptions\s*:\s*\[?\w*\.?LaunchOptionsKey:?.*\]?\s*\??\)",
-                    r"func\s+application\s*\(.*didFinishLaunchingWithOptions.*\)",
-                    r"(?:override\s+)?func\s+(?:application|_)\s*\(.*didFinishLaunchingWithOptions"
+        {
+            'name': 'didFinishLaunchingWithOptions',
+            'swift_patterns': [
+                r"func\s+application\s*\(\s*_?\s*application:\s*UIApplication\s*,\s*didFinishLaunchingWithOptions\s*:\s*\[?\w*\.?LaunchOptionsKey:?.*\]?\s*\??\)",
+                r"func\s+application\s*\(.*didFinishLaunchingWithOptions.*\)",
+                r"(?:override\s+)?func\s+(?:application|_)\s*\(.*didFinishLaunchingWithOptions"
+            ],
+            'objc_patterns': [
+                r"-\s*\(BOOL\)\s*application:\s*\(UIApplication\s*\*\)\s*\w+\s*didFinishLaunchingWithOptions:\s*\(NSDictionary\s*\*\)\s*\w+"
+            ],
+            'code': {
+                'swift': [
+                    "Hansel.enableDebugLogs() // TODO: Disable debug logs for production" if add_hansel_code_flag else None,
+                    "Smartech.sharedInstance().trackAppInstallUpdateBySmartech()",
+                    "Smartech.sharedInstance().setDebugLevel(.verbose) // TODO: Set appropriate debug level",
+                    "SmartPush.sharedInstance().registerForPushNotificationWithDefaultAuthorizationOptions()",
+                    "UNUserNotificationCenter.current().delegate = self",
+                    "Smartech.sharedInstance().initSDK(with: self, withLaunchOptions: launchOptions)",
                 ],
-                'objc_patterns': [
-                    r"-\s*\(BOOL\)\s*application:\s*\(UIApplication\s*\*\)\s*\w+\s*didFinishLaunchingWithOptions:\s*\(NSDictionary\s*\*\)\s*\w+"
-                ],
-                'code': {
-                    'swift': [
-                        "Smartech.sharedInstance().initSDK(with: self, withLaunchOptions: launchOptions)",
-                        "UNUserNotificationCenter.current().delegate = self",
-                        "SmartPush.sharedInstance().registerForPushNotificationWithDefaultAuthorizationOptions()",
-                        "Smartech.sharedInstance().setDebugLevel(.verbose) // TODO: Set appropriate debug level",
-                        "Smartech.sharedInstance().trackAppInstallUpdateBySmartech()",
-                        "Hansel.enableDebugLogs() // TODO: Disable debug logs for production" if add_hansel_code_flag else None,
-                    ],
-                    'objc': [
-                        "[[Smartech sharedInstance] initSDKWithApplication:self didFinishLaunchingWithOptions:launchOptions];",
-                        "[UNUserNotificationCenter currentNotificationCenter].delegate = self;",
-                        "[[SmartPush sharedInstance] registerForPushNotificationWithDefaultAuthorizationOptions];",
-                        "[[Smartech sharedInstance] setDebugLevel:SmartechLogLevelVerbose];",
-                        "[[Smartech sharedInstance] trackAppInstallUpdateBySmartech];",
-                        "[Hansel enableDebugLogs];" if add_hansel_code_flag else None,
-                    ]
-                 },
-                'marker': SMARTECH_DID_FINISH_LAUNCHING_MARKER_START,
-                'insertion_logic': 'after_brace', 'add_if_missing': False,
-            },
-            {
-                'name': 'didRegisterForRemoteNotificationsWithDeviceToken',
-                'swift_patterns': [
-                    r"(?:override\s+)?func\s+application\s*\(\s*_?\s*application:\s*UIApplication\s*,\s*didRegisterForRemoteNotificationsWithDeviceToken\s*deviceToken:\s*Data\s*\)",
-                    r"(?:override\s+)?func\s+application\s*\(\s*.*didRegisterForRemoteNotificationsWithDeviceToken.*"
-                ],
-                'objc_patterns': [
-                    r"-\s*\(.*didRegisterForRemoteNotificationsWithDeviceToken\s*:\s*NSData"
-                ],
-                'code': {'swift': ["SmartPush.sharedInstance().didRegisterForRemoteNotifications(withDeviceToken: deviceToken)"],
-                         'objc': ["[[SmartPush sharedInstance] didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];"]},
-                'marker': SMARTECH_DID_REGISTER_TOKEN_MARKER, 'insertion_logic': 'after_brace', 'add_if_missing': True,
-                'swift_stub': [f"{'override ' if use_override else ''}func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {{",
-                               f"{DEFAULT_INDENT}// {SMARTECH_DID_REGISTER_TOKEN_MARKER}",
-                               f"{DEFAULT_INDENT}SmartPush.sharedInstance().didRegisterForRemoteNotifications(withDeviceToken: deviceToken)", "}"],
-                 'objc_stub': ["- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {",
-                               f"{DEFAULT_INDENT}// {SMARTECH_DID_REGISTER_TOKEN_MARKER}",
-                               f"{DEFAULT_INDENT}[[SmartPush sharedInstance] didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];", "}"]
-            },
-            {
-                'name': 'didFailToRegisterForRemoteNotificationsWithError',
-                'swift_patterns': [
-                    r"(?:override\s+)?func\s+application\s*\(\s*_?\s*application:\s*UIApplication\s*,\s*didFailToRegisterForRemoteNotificationsWithError\s*error:\s*Error\s*\)",
-                    r"(?:override\s+)?func\s+application\s*\(\s*.*didFailToRegisterForRemoteNotificationsWithError.*"
-                ],
-                'objc_patterns': [
-                    r"-\s*\(.*didFailToRegisterForRemoteNotificationsWithError\s*:\s*NSError"
-                ],
-                'code': {'swift': ["SmartPush.sharedInstance().didFailToRegisterForRemoteNotificationsWithError(error)"],
-                         'objc': ["[[SmartPush sharedInstance] didFailToRegisterForRemoteNotificationsWithError:error];"]},
-                'marker': SMARTECH_DID_FAIL_REGISTER_MARKER, 'insertion_logic': 'after_brace', 'add_if_missing': True,
-                'swift_stub': [f"{'override ' if use_override else ''}func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {{",
-                               f"{DEFAULT_INDENT}// {SMARTECH_DID_FAIL_REGISTER_MARKER}",
-                               f"{DEFAULT_INDENT}SmartPush.sharedInstance().didFailToRegisterForRemoteNotificationsWithError(error)",
-                               f"{DEFAULT_INDENT}print(\"Failed to register for remote notifications: \\(error.localizedDescription)\")", "}"],
-                'objc_stub': ["- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {",
-                              f"{DEFAULT_INDENT}// {SMARTECH_DID_FAIL_REGISTER_MARKER}",
-                              f"{DEFAULT_INDENT}[[SmartPush sharedInstance] didFailToRegisterForRemoteNotificationsWithError:error];",
-                              f"{DEFAULT_INDENT}NSLog(@\"Failed to register for remote notifications: %@\", error.localizedDescription);", "}"]
-            },
-            {
-                'name': 'willPresent',
-                'swift_patterns': [
-                    r"(?:override\s+)?func\s+userNotificationCenter\s*\(\s*_?\s*center:\s*UNUserNotificationCenter\s*,\s*willPresent\s*notification:\s*UNNotification.*",
-                    r"func\s+userNotificationCenter\s*\(.*willPresent.*"
-                ],
-                'objc_patterns': [],
-                'code': {'swift': [
-                    "SmartPush.sharedInstance().willPresentForegroundNotification(notification)"
-                ]},
-                'marker': SMARTECH_WILL_PRESENT_MARKER, 'insertion_logic': 'after_brace', 'add_if_missing': True,
-                'swift_stub': [f"{'override ' if use_override else ''}func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {{",
-                               f"{DEFAULT_INDENT}SmartPush.sharedInstance().willPresentForegroundNotification(notification)",
-                               f"{DEFAULT_INDENT}completionHandler([.alert, .badge, .sound])", "}"],
-                'objc_stub': []
-            },
-            {
-                'name': 'didReceive',
-                'swift_patterns': [
-                    r"(?:override\s+)?func\s+userNotificationCenter\s*\(\s*_?\s*center:\s*UNUserNotificationCenter\s*,\s*didReceive\s*response:\s*UNNotificationResponse.*",
-                    r"func\s+userNotificationCenter\s*\(.*didReceive.*"
-                ],
-                'objc_patterns': [],
-                'code': {'swift': [
-                    "SmartPush.sharedInstance().didReceive(response)"
-                ]},
-                'marker': SMARTECH_DID_RECEIVE_MARKER, 'insertion_logic': 'after_brace', 'add_if_missing': True,
-                'swift_stub': [f"{'override ' if use_override else ''}func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {{",
-                               f"{DEFAULT_INDENT}SmartPush.sharedInstance().didReceive(response)",
-                               f"{DEFAULT_INDENT}completionHandler()", "}"],
-                'objc_stub': []
-            },
-            {
-                'name': 'openURL',
-                'swift_patterns': [
-                    r"(?:override\s+)?func\s+application\s*\(\s*_?\s*app:\s*UIApplication\s*,\s*open\s+url:\s*URL.*",
-                    r"func\s+application\s*\(.*open\s+url:.*"
-                ],
-                'objc_patterns': [],
-                'code': {'swift': [
-                    "let handleBySmartech:Bool = Smartech.sharedInstance().application(app, open: url, options: options);",
-                    "if(!handleBySmartech) {",
-                    "    // handle the url by the app",
-                    "}",
-                    "return true;"
-                ]},
-                'marker': SMARTECH_OPEN_URL_MARKER_START, 'insertion_logic': 'after_brace', 'add_if_missing': True,
-                'swift_stub': [f"{'override ' if use_override else ''}func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {{",
-                               f"{DEFAULT_INDENT}let handleBySmartech:Bool = Smartech.sharedInstance().application(app, open: url, options: options);",
-                               f"{DEFAULT_INDENT}if(!handleBySmartech) {{",
-                               f"{DEFAULT_INDENT}{DEFAULT_INDENT}// handle the url by the app",
-                               f"{DEFAULT_INDENT}}}",
-                               f"{DEFAULT_INDENT}return true;", "}"],
-                'objc_stub': []
-            },
-        ]
+                'objc': [
+                    "[Hansel enableDebugLogs];" if add_hansel_code_flag else None,
+                    "[[Smartech sharedInstance] trackAppInstallUpdateBySmartech];",
+                    "[[Smartech sharedInstance] setDebugLevel:SmartechLogLevelVerbose];",
+                    "[[SmartPush sharedInstance] registerForPushNotificationWithDefaultAuthorizationOptions];",
+                    "[UNUserNotificationCenter currentNotificationCenter].delegate = self;",
+                    "[[Smartech sharedInstance] initSDKWithApplication:self didFinishLaunchingWithOptions:launchOptions];",
+                ]
+                },
+            'marker': SMARTECH_DID_FINISH_LAUNCHING_MARKER_START,
+            'insertion_logic': 'after_brace', 'add_if_missing': False,
+        },
+        {
+            'name': 'didRegisterForRemoteNotificationsWithDeviceToken',
+            'swift_patterns': [
+                r"(?:override\s+)?func\s+application\s*\(\s*_?\s*application:\s*UIApplication\s*,\s*didRegisterForRemoteNotificationsWithDeviceToken\s*deviceToken:\s*Data\s*\)",
+                r"(?:override\s+)?func\s+application\s*\(\s*.*didRegisterForRemoteNotificationsWithDeviceToken.*"
+            ],
+            'objc_patterns': [
+                r"-\s*\(.*didRegisterForRemoteNotificationsWithDeviceToken\s*:\s*NSData"
+            ],
+            'code': {'swift': ["SmartPush.sharedInstance().didRegisterForRemoteNotifications(withDeviceToken: deviceToken)"],
+                        'objc': ["[[SmartPush sharedInstance] didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];"]},
+            'marker': SMARTECH_DID_REGISTER_TOKEN_MARKER, 'insertion_logic': 'after_brace', 'add_if_missing': True,
+            'swift_stub': [f"{'override ' if use_override else ''}func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {{",
+                            f"{DEFAULT_INDENT}// {SMARTECH_DID_REGISTER_TOKEN_MARKER}",
+                            f"{DEFAULT_INDENT}SmartPush.sharedInstance().didRegisterForRemoteNotifications(withDeviceToken: deviceToken)", "}"],
+                'objc_stub': ["- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {",
+                            f"{DEFAULT_INDENT}// {SMARTECH_DID_REGISTER_TOKEN_MARKER}",
+                            f"{DEFAULT_INDENT}[[SmartPush sharedInstance] didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];", "}"]
+        },
+        {
+            'name': 'didFailToRegisterForRemoteNotificationsWithError',
+            'swift_patterns': [
+                r"(?:override\s+)?func\s+application\s*\(\s*_?\s*application:\s*UIApplication\s*,\s*didFailToRegisterForRemoteNotificationsWithError\s*error:\s*Error\s*\)",
+                r"(?:override\s+)?func\s+application\s*\(\s*.*didFailToRegisterForRemoteNotificationsWithError.*"
+            ],
+            'objc_patterns': [
+                r"-\s*\(.*didFailToRegisterForRemoteNotificationsWithError\s*:\s*NSError"
+            ],
+            'code': {'swift': ["SmartPush.sharedInstance().didFailToRegisterForRemoteNotificationsWithError(error)"],
+                        'objc': ["[[SmartPush sharedInstance] didFailToRegisterForRemoteNotificationsWithError:error];"]},
+            'marker': SMARTECH_DID_FAIL_REGISTER_MARKER, 'insertion_logic': 'after_brace', 'add_if_missing': True,
+            'swift_stub': [f"{'override ' if use_override else ''}func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {{",
+                            f"{DEFAULT_INDENT}// {SMARTECH_DID_FAIL_REGISTER_MARKER}",
+                            f"{DEFAULT_INDENT}SmartPush.sharedInstance().didFailToRegisterForRemoteNotificationsWithError(error)",
+                            f"{DEFAULT_INDENT}print(\"Failed to register for remote notifications: \\(error.localizedDescription)\")", "}"],
+            'objc_stub': ["- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {",
+                            f"{DEFAULT_INDENT}// {SMARTECH_DID_FAIL_REGISTER_MARKER}",
+                            f"{DEFAULT_INDENT}[[SmartPush sharedInstance] didFailToRegisterForRemoteNotificationsWithError:error];",
+                            f"{DEFAULT_INDENT}NSLog(@\"Failed to register for remote notifications: %@\", error.localizedDescription);", "}"]
+        },
+        {
+            'name': 'willPresent',
+            'swift_patterns': [
+                r"(?:override\s+)?func\s+userNotificationCenter\s*\(\s*_?\s*center:\s*UNUserNotificationCenter\s*,\s*willPresent\s*notification:\s*UNNotification.*",
+                r"func\s+userNotificationCenter\s*\(.*willPresent.*"
+            ],
+            'objc_patterns': [],
+            'code': {'swift': [
+                "SmartPush.sharedInstance().willPresentForegroundNotification(notification)"
+            ]},
+            'marker': SMARTECH_WILL_PRESENT_MARKER, 'insertion_logic': 'after_brace', 'add_if_missing': True,
+            'swift_stub': [f"{'override ' if use_override else ''}func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {{",
+                            f"{DEFAULT_INDENT}SmartPush.sharedInstance().willPresentForegroundNotification(notification)",
+                            f"{DEFAULT_INDENT}completionHandler([.alert, .badge, .sound])", "}"],
+            'objc_stub': []
+        },
+        {
+            'name': 'didReceive',
+            'swift_patterns': [
+                r"(?:override\s+)?func\s+userNotificationCenter\s*\(\s*_?\s*center:\s*UNUserNotificationCenter\s*,\s*didReceive\s*response:\s*UNNotificationResponse.*",
+                r"func\s+userNotificationCenter\s*\(.*didReceive.*"
+            ],
+            'objc_patterns': [],
+            'code': {'swift': [
+                "SmartPush.sharedInstance().didReceive(response)"
+            ]},
+            'marker': SMARTECH_DID_RECEIVE_MARKER, 'insertion_logic': 'after_brace', 'add_if_missing': True,
+            'swift_stub': [f"{'override ' if use_override else ''}func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {{",
+                            f"{DEFAULT_INDENT}SmartPush.sharedInstance().didReceive(response)",
+                            f"{DEFAULT_INDENT}completionHandler()", "}"],
+            'objc_stub': []
+        },
+        {
+            'name': 'openURL',
+            'swift_patterns': [
+                r"(?:override\s+)?func\s+application\s*\(\s*_?\s*app:\s*UIApplication\s*,\s*open\s+url:\s*URL.*",
+                r"func\s+application\s*\(.*open\s+url:.*"
+            ],
+            'objc_patterns': [],
+            'code': {'swift': [
+                "let handleBySmartech:Bool = Smartech.sharedInstance().application(app, open: url, options: options);",
+                "if(!handleBySmartech) {",
+                "    // handle the url by the app",
+                "}",
+                "return true;"
+            ]},
+            'marker': SMARTECH_OPEN_URL_MARKER_START, 'insertion_logic': 'after_brace', 'add_if_missing': True,
+            'swift_stub': [f"{'override ' if use_override else ''}func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {{",
+                            f"{DEFAULT_INDENT}let handleBySmartech:Bool = Smartech.sharedInstance().application(app, open: url, options: options);",
+                            f"{DEFAULT_INDENT}if(!handleBySmartech) {{",
+                            f"{DEFAULT_INDENT}{DEFAULT_INDENT}// handle the url by the app",
+                            f"{DEFAULT_INDENT}}}",
+                            f"{DEFAULT_INDENT}return true;", "}"],
+            'objc_stub': []
+        },
+    ]
         # Add or update methods
         for method_config in methods_to_process:
             lines, modified = add_or_update_method(lines, language, method_config)
@@ -574,37 +607,36 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
         print(f"Error modifying AppDelegate: {e}")
         return False
 
+#
+# ==============================================================================
+# == STEP 1: Replace this entire function in your smart_genie.py file ==
+# ==============================================================================
+#
 def create_smartech_extensions(smartech_app_group, smartech_app_id, ios_project_path):
-    # --- SmartechNCE ---
+    print("\n--- Creating Smartech Extension Files ---")
+    
+    # --- SmartechNCE (Notification Content Extension) ---
     nce_path = os.path.join(ios_project_path, "SmartechNCE")
-    os.makedirs(os.path.join(nce_path, "Base.lproj", "Media.xcassets", "MyAppIcon.imageset"), exist_ok=True)
-    # Info.plist for NCE (matches your provided XML structure)
+    os.makedirs(nce_path, exist_ok=True)
+    
     nce_info = {
-        "NSAppTransportSecurity": {
-            "NSAllowsArbitraryLoads": True
-        },
-        "NSExtension": {
-            "NSExtensionAttributes": {
-                "UNNotificationExtensionCategory": [
-                    "SmartechCarouselLandscapeNotification",
-                    "SmartechCarouselPortraitNotification",
-                    "SmartechPN"
-                ],
-                "UNNotificationExtensionDefaultContentHidden": True,
-                "UNNotificationExtensionUserInteractionEnabled": True,
-                "UNNotificationExtensionInitialContentSizeRatio": 0.25
+        "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)", "CFBundleName": "$(PRODUCT_NAME)",
+        "CFBundleDevelopmentRegion": "$(DEVELOPMENT_LANGUAGE)", "CFBundleDisplayName": "SmartechNCE",
+        "CFBundlePackageType": "$(PRODUCT_BUNDLE_PACKAGE_TYPE)", "CFBundleShortVersionString": "$(MARKETING_VERSION)",
+        "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)", "NSExtension": {
+            "NSExtensionPointIdentifier": "com.apple.usernotifications.content-extension",
+            "NSExtensionMainStoryboard": "MainInterface", "NSExtensionAttributes": {
+                "UNNotificationExtensionCategory": ["SmartechCarouselLandscapeNotification", "SmartechCarouselPortraitNotification", "SmartechPN"],
+                "UNNotificationExtensionDefaultContentHidden": True, "UNNotificationExtensionUserInteractionEnabled": True,
+                "UNNotificationExtensionInitialContentSizeRatio": 0.25,
             },
-            "NSExtensionMainStoryboard": "MainInterface",
-            "NSExtensionPointIdentifier": "com.apple.usernotifications.content-extension"
         },
-        "SmartechKeys": {
-            "SmartechAppGroup": smartech_app_group,
-            "SmartechNotificationIcon": "MyAppIcon"
-        }
+        "SmartechKeys": {"SmartechAppGroup": smartech_app_group, "SmartechNotificationIcon": "MyAppIcon"}
     }
     with open(os.path.join(nce_path, "Info.plist"), "wb") as f:
         plistlib.dump(nce_info, f)
-    # NotificationViewController.swift
+
+    # **FIXED**: Updated NotificationViewController.swift with the correct outlet property.
     with open(os.path.join(nce_path, "NotificationViewController.swift"), "w") as f:
         f.write("""import UIKit
 import SmartPush
@@ -619,22 +651,12 @@ class NotificationViewController: SMTCustomNotificationViewController {
     }
 }
 """)
-    # SmartechNCE.entitlements
+
     with open(os.path.join(nce_path, "SmartechNCE.entitlements"), "w") as f:
-        f.write(f"""<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>com.apple.security.application-groups</key>
-    <array>
-        <string>{smartech_app_group}</string>
-    </array>
-</dict>
-</plist>
-""")
-    # Base.lproj/MainInterface.storyboard (minimal stub)
-    os.makedirs(os.path.join(nce_path, "Base.lproj"), exist_ok=True)
-    with open(os.path.join(nce_path, "Base.lproj", "MainInterface.storyboard"), "w") as f:
+        f.write(f'<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>com.apple.security.application-groups</key><array><string>{smartech_app_group}</string></array></dict></plist>')
+
+    # **FIXED**: Using the exact storyboard content you provided.
+    with open(os.path.join(nce_path, "MainInterface.storyboard"), "w") as f:
         f.write("""<?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="M4Y-Lb-cyx">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
@@ -687,70 +709,31 @@ class NotificationViewController: SMTCustomNotificationViewController {
     </resources>
 </document>
 """)
-    # Media.xcassets/Contents.json
-    os.makedirs(os.path.join(nce_path, "Media.xcassets", "MyAppIcon.imageset"), exist_ok=True)
-    with open(os.path.join(nce_path, "Media.xcassets", "Contents.json"), "w") as f:
-        f.write("""{
-  "info" : {
-    "version" : 1,
-    "author" : "xcode"
-  }
-}
-""")
-    # Media.xcassets/MyAppIcon.imageset/Contents.json
-    with open(os.path.join(nce_path, "Media.xcassets", "MyAppIcon.imageset", "Contents.json"), "w") as f:
-        f.write("""{
-  "images" : [
-    {
-      "idiom" : "iphone",
-      "size" : "20x20",
-      "scale" : "2x",
-      "filename" : "20.png"
-    },
-    {
-      "idiom" : "iphone",
-      "size" : "20x20",
-      "scale" : "3x",
-      "filename" : "40.png"
-    },
-    {
-      "idiom" : "iphone",
-      "size" : "29x29",
-      "scale" : "2x",
-      "filename" : "58.png"
-    }
-  ],
-  "info" : {
-    "version" : 1,
-    "author" : "xcode"
-  }
-}
-""")
-    # Media.xcassets/MyAppIcon.imageset/20.png, 40.png, 58.png (empty files as placeholders)
-    for icon in ["20.png", "40.png", "58.png"]:
-        with open(os.path.join(nce_path, "Media.xcassets", "MyAppIcon.imageset", icon), "wb") as f:
-            f.write(b"")  # Empty placeholder
+    
+    nce_assets_path = os.path.join(nce_path, "Media.xcassets")
+    os.makedirs(os.path.join(nce_assets_path, "MyAppIcon.imageset"), exist_ok=True)
+    with open(os.path.join(nce_assets_path, "Contents.json"), "w") as f:
+        f.write('{"info" : {"author" : "xcode","version" : 1}}')
+    with open(os.path.join(nce_assets_path, "MyAppIcon.imageset", "Contents.json"), "w") as f:
+        f.write('{"images" : [], "info" : {"author" : "xcode","version" : 1}}')
 
-    # --- SmartechNSE ---
+    # --- SmartechNSE (Notification Service Extension) ---
     nse_path = os.path.join(ios_project_path, "SmartechNSE")
     os.makedirs(nse_path, exist_ok=True)
-    # Info.plist for NSE
+    
     nse_info = {
-        "NSAppTransportSecurity": {
-            "NSAllowsArbitraryLoads": True
-        },
-        "SmartechKeys": {
-            "SmartechAppId": smartech_app_id,
-            "SmartechAppGroup": smartech_app_group
-        },
-        "NSExtension": {
+        "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)", "CFBundleName": "$(PRODUCT_NAME)",
+        "CFBundleDevelopmentRegion": "$(DEVELOPMENT_LANGUAGE)", "CFBundleDisplayName": "SmartechNSE",
+        "CFBundlePackageType": "$(PRODUCT_BUNDLE_PACKAGE_TYPE)", "CFBundleShortVersionString": "$(MARKETING_VERSION)",
+        "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)", "NSExtension": {
             "NSExtensionPointIdentifier": "com.apple.usernotifications.service",
             "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).NotificationService"
-        }
+        },
+        "SmartechKeys": {"SmartechAppId": smartech_app_id, "SmartechAppGroup": smartech_app_group}
     }
     with open(os.path.join(nse_path, "Info.plist"), "wb") as f:
         plistlib.dump(nse_info, f)
-    # NotificationService.swift
+
     with open(os.path.join(nse_path, "NotificationService.swift"), "w") as f:
         f.write("""import UserNotifications
 import SmartPush
@@ -772,23 +755,11 @@ class NotificationService: UNNotificationServiceExtension {
   }
 }
 """)
-    # SmartechNSE.entitlements
-    with open(os.path.join(nse_path, "SmartechNSE.entitlements"), "w") as f:
-        f.write(f"""<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>com.apple.security.application-groups</key>
-    <array>
-        <string>{smartech_app_group}</string>
-    </array>
-</dict>
-</plist>
-""")
-    print("✅ SmartechNCE and SmartechNSE extensions created in your ios/ directory.")
 
-# --- Add this import for pbxproj ---
-from pbxproj import XcodeProject
+    with open(os.path.join(nse_path, "SmartechNSE.entitlements"), "w") as f:
+        f.write(f'<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>com.apple.security.application-groups</key><array><string>{smartech_app_group}</string></array></dict></plist>')
+    print("✅ SmartechNCE and SmartechNSE extension files created successfully.")
+
 
 def write_ensure_capabilities_ruby_script(script_path):
     ruby_code = """
@@ -858,141 +829,212 @@ ensure_capabilities(xcodeproj_path, app_group_id)
         f.write(ruby_code)
 
 def write_ruby_add_target_script(script_path):
-    ruby_code = """
+    # This is a merged and improved script.
+    # It combines the successful target creation logic from your script (which provides the correct icons and tabs)
+    # with the detailed build settings and file handling from the previous version (which ensures 'pod install' works).
+    ruby_code = r"""
 require 'xcodeproj'
+require 'pathname'
 
-def add_folder_reference(project, folder_name)
-  # Add a yellow folder reference at the project root if not present
-  unless project.main_group.children.any? { |c| c.display_name == folder_name && c.isa == 'PBXFileReference' }
-    folder_ref = project.main_group.new_reference(folder_name)
-    folder_ref.set_source_tree('SOURCE_ROOT')
-    folder_ref.set_path(folder_name)
-  end
-end
-
-def add_files_to_target(project, folder_name, target)
-  group = project.main_group.groups.find { |g| g.display_name == folder_name } ||
-          project.main_group.new_group(folder_name)
-  group.set_source_tree('SOURCE_ROOT')
-  group.set_path(folder_name)
-  Dir.glob(File.join(folder_name, '**', '*')).each do |file|
-    next if File.directory?(file)
-    ext = File.extname(file)
-    file_ref = group.files.find { |f| f.path == file } || group.new_file(file)
-    if ['.swift', '.m', '.mm'].include?(ext)
-      target.add_file_references([file_ref], '-')
-    end
-  end
-end
-
+# This function embeds the created extension within the main application target.
+# This is crucial for the app to find and use the extension.
 def embed_extension_in_main_target(project, extension_target)
   main_target = project.targets.find { |t| t.symbol_type == :application }
-  return unless main_target
-
-  # Find or create the Embed App Extensions build phase
-  embed_phase = main_target.copy_files_build_phases.find do |phase|
-    phase.dst_subfolder_spec == '13'
+  unless main_target
+    puts "⚠️  Could not find main app target to embed extension."
+    return
   end
+  main_target.add_dependency(extension_target)
+  
+  embed_phase = main_target.copy_files_build_phases.find { |p| p.dst_subfolder_spec == '13' } # 13 = PlugIns
   unless embed_phase
     embed_phase = main_target.new_copy_files_build_phase('Embed App Extensions')
-    embed_phase.dst_subfolder_spec = '13' # 13 = PlugIns
+    embed_phase.dst_subfolder_spec = '13'
   end
-
-  # Find the .appex product reference for the extension target
+  
   appex_ref = extension_target.product_reference
   unless embed_phase.files_references.include?(appex_ref)
-    embed_phase.add_file_reference(appex_ref)
-    puts "✅ Embedded #{extension_target.name}.appex in main app target."
+    build_file = embed_phase.add_file_reference(appex_ref, true)
+    build_file.settings = { 'ATTRIBUTES' => ['CodeSignOnCopy', 'RemoveHeadersOnCopy'] }
+    puts "✅ Embedded #{extension_target.name} into main target '#{main_target.name}'."
   else
-    puts "ℹ️ #{extension_target.name}.appex already embedded in main app target."
+    puts "ℹ️  #{extension_target.name} already embedded in main target."
   end
 end
 
-def add_extension_target(project_path, target_name, info_plist, entitlements)
+
+def add_extension_target(project_path, target_name, product_type, info_plist, entitlements, source_files, resource_files)
   project = Xcodeproj::Project.open(project_path)
-  target = project.targets.find { |t| t.name == target_name }
-  if target.nil?
-    target = project.new_target(:app_extension, target_name, :ios, '13.0')
-    # Set bundle id based on main app
-    main_target = project.targets.find { |t| t.symbol_type == :application }
-    main_bundle_id = main_target.build_configurations[0].build_settings['PRODUCT_BUNDLE_IDENTIFIER'] rescue nil
-    if main_bundle_id
-      target.build_configurations.each do |config|
-        config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = [main_bundle_id, target_name].join('.')
-      end
-    end
-    target.build_configurations.each do |config|
-      config.build_settings['INFOPLIST_FILE'] = info_plist
-      config.build_settings['CODE_SIGN_ENTITLEMENTS'] = entitlements if entitlements && !entitlements.empty?
-      config.build_settings['PRODUCT_NAME'] = target_name
-      config.build_settings['SWIFT_VERSION'] = '5.0' # <-- Add this line
-    end
-    # Add folder reference (yellow folder) at root
-    add_folder_reference(project, target_name)
-    # Add files to target
-    add_files_to_target(project, target_name, target)
-    puts "✅ Created target #{target_name}."
-  else
-    puts "ℹ️ Target #{target_name} already exists."
+  
+  if project.targets.any? { |t| t.name == target_name }
+      puts "ℹ️  Target '#{target_name}' already exists. Skipping creation."
+      return
   end
 
-  # Always embed the .appex in the main app target
+  puts "Creating new target '#{target_name}'..."
+  target = project.new_target(:app_extension, target_name, :ios, '13.0')
+  target.product_type = product_type
+
+  # --- Merged Logic ---
+  # 1. Using the robust build settings required for CocoaPods.
+  # 2. Using your successful logic for deriving the bundle identifier.
+  main_target = project.targets.find { |t| t.symbol_type == :application }
+  main_bundle_id = main_target.build_configurations[0].build_settings['PRODUCT_BUNDLE_IDENTIFIER']
+
+  target.build_configurations.each do |config|
+    config.build_settings.merge!({
+        'INFOPLIST_FILE' => info_plist,
+        'PRODUCT_NAME' => "$(TARGET_NAME)",
+        'SWIFT_VERSION' => '5.0',
+        'IPHONEOS_DEPLOYMENT_TARGET' => '13.0',
+        'TARGETED_DEVICE_FAMILY' => '1,2',
+        'CODE_SIGN_STYLE' => 'Automatic',
+        'LD_RUNPATH_SEARCH_PATHS' => '$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks',
+    })
+    
+    # Set Bundle ID based on main app's ID
+    if main_bundle_id
+        config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = "#{main_bundle_id}.#{target_name}"
+    end
+    
+    # Set entitlements file
+    if entitlements && !entitlements.empty?
+        config.build_settings['CODE_SIGN_ENTITLEMENTS'] = entitlements
+    end
+  end
+
+  # --- File & Group Handling ---
+  # Using the more standard blue group and direct file reference method
+  # which is more compatible with CocoaPods.
+  puts "Adding file references for #{target_name}..."
+  group = project.main_group.find_subpath(target_name, true)
+  group.clear()
+  group.set_source_tree('<group>')
+  group.set_path(target_name)
+
+  # Add source files to the "Compile Sources" build phase
+  source_files.each do |file_path|
+      file_ref = group.new_file(File.basename(file_path))
+      target.add_file_references([file_ref])
+  end
+
+  # Add resource files to the "Copy Bundle Resources" build phase
+  all_resource_files = resource_files + [info_plist]
+  if entitlements && !entitlements.empty?
+      all_resource_files << entitlements
+  end
+  resource_refs = all_resource_files.map { |f| group.new_file(File.basename(f)) }
+  target.add_resources(resource_refs)
+
   embed_extension_in_main_target(project, target)
+  
   project.save
-  puts "✅ Ensured target #{target_name} and embedded its .appex in main app target."
+  puts "✅ Successfully configured target '#{target_name}' in #{File.basename(project_path)}."
 end
 
-if ARGV.length < 4
-  puts "Usage: ruby add_target.rb <xcodeproj_path> <target_name> <info_plist> <entitlements>"
-  exit 1
+
+# --- Script Entry Point ---
+# The script now uses a more generic argument structure
+xcodeproj_path = ARGV[0]
+command = ARGV[1]
+
+if command == "SmartechNCE"
+    add_extension_target(
+        xcodeproj_path, "SmartechNCE",
+        "com.apple.product-type.app-extension.notification-content",
+        "SmartechNCE/Info.plist", "SmartechNCE/SmartechNCE.entitlements",
+        ["SmartechNCE/NotificationViewController.swift"],
+        ["SmartechNCE/MainInterface.storyboard", "SmartechNCE/Media.xcassets"]
+    )
+elsif command == "SmartechNSE"
+    add_extension_target(
+        xcodeproj_path, "SmartechNSE",
+        "com.apple.product-type.app-extension.notification-service",
+        "SmartechNSE/Info.plist", "SmartechNSE/SmartechNSE.entitlements",
+        ["SmartechNSE/NotificationService.swift"], []
+    )
 end
 
-add_extension_target(ARGV[0], ARGV[1], ARGV[2], ARGV[3])
 """
     with open(script_path, "w") as f:
         f.write(ruby_code)
 
-def add_target_with_ruby(xcodeproj_path, target_name, info_plist, entitlements):
-    ruby_script = "add_target.rb"
-    write_ruby_add_target_script(os.path.join("ios", ruby_script))
-    subprocess.run([
-        "ruby", ruby_script,
-        os.path.basename(xcodeproj_path),
-        target_name,
-        os.path.join(target_name, os.path.basename(info_plist)),
-        os.path.join(target_name, os.path.basename(entitlements)) if entitlements else ""
-    ], check=True, cwd="ios")
-    os.remove(os.path.join("ios", ruby_script))
+def add_target_with_ruby(xcodeproj_path, command):
+    # The ruby script is now self-contained and takes a simple command
+    ruby_script_name = "add_smartech_target.rb"
+    ruby_script_full_path = os.path.join(os.path.dirname(xcodeproj_path), ruby_script_name)
 
-def add_extension_target_to_xcodeproj(xcodeproj_path, extension_name, sources, info_plist_path, entitlements_path):
-    pbxproj_file = os.path.join(xcodeproj_path, 'project.pbxproj')
-    project = XcodeProject.load(pbxproj_file)
-    # Check if target already exists
-    if any(t.name == extension_name for t in project.objects.get_targets()):
-        print(f"Target {extension_name} already exists in Xcode project.")
-        return
-    # Add new target (app_extension covers both NSE and NCE)
-    target = project.add_target(extension_name, 'app_extension', extension_name)
-    # Add source files
-    for src in sources:
-        project.add_file(src, parent=project.get_or_create_group(extension_name), target=target)
-    # Add Info.plist
-    project.add_file(info_plist_path, parent=project.get_or_create_group(extension_name), force=False)
-    # Add entitlements
-    if entitlements_path:
-        rel_entitlements_path = os.path.relpath(entitlements_path, os.path.dirname(xcodeproj_path))
-        project.add_file(entitlements_path, parent=project.get_or_create_group(extension_name), force=False)
-        project.add_build_setting('CODE_SIGN_ENTITLEMENTS', rel_entitlements_path, target=target)
-    # Set Info.plist
-    rel_info_plist_path = os.path.relpath(info_plist_path, os.path.dirname(xcodeproj_path))
-    project.add_build_setting('INFOPLIST_FILE', rel_info_plist_path, target=target)
-    # Set unique PRODUCT_NAME for each extension
-    project.add_build_setting('PRODUCT_NAME', extension_name, target=target)  # <-- Add this line
-    # Set SWIFT_VERSION for each extension
-    project.add_build_setting('SWIFT_VERSION', '5.0', target=target)  # <-- Add this line
-    # Save project
-    project.save()
-    print(f"✅ Added {extension_name} as a target to your Xcode project.")
+    try:
+        # Write the ruby script into the 'ios' directory
+        write_ruby_add_target_script(ruby_script_full_path)
+
+        # Get the base name of the project (e.g., "Runner.xcodeproj")
+        project_basename = os.path.basename(xcodeproj_path)
+
+        print(f"\n--- Running Ruby script to configure '{command}' target ---")
+        if command == "SmartechNCE":
+            product_type = "com.apple.product-type.app-extension.notification-content"
+        elif command == "SmartechNSE":
+            product_type = "com.apple.product-type.app-extension.notification-service"
+        else:
+            product_type = ""
+
+        subprocess.run([
+            "ruby",
+            ruby_script_name,
+            project_basename,
+            command,
+            product_type # Pass the product type to the Ruby script
+        ], check=True, cwd=os.path.dirname(xcodeproj_path), capture_output=False) # Run from 'ios' dir
+
+    except subprocess.CalledProcessError as e:
+        print(f"❌ An error occurred while running the Ruby script for {command}.")
+        print(f"   Stderr: {e.stderr.decode() if e.stderr else 'N/A'}")
+        print(f"   Stdout: {e.stdout.decode() if e.stdout else 'N/A'}")
+    except Exception as e:
+        print(f"❌ An unexpected error occurred: {e}")
+    finally:
+        # Clean up the script file
+        if os.path.exists(ruby_script_full_path):
+            os.remove(ruby_script_full_path)
+    # The ruby script is now self-contained and takes a simple command
+    ruby_script_name = "add_smartech_target.rb"
+    ruby_script_path = os.path.join(os.path.dirname(xcodeproj_path), ruby_script_name)
+
+    try:
+        # Write the ruby script into the 'ios' directory
+        write_ruby_add_target_script(ruby_script_path)
+
+        # Get the base name of the project (e.g., "Runner.xcodeproj")
+        project_basename = os.path.basename(xcodeproj_path)
+
+        print(f"\n--- Running Ruby script to configure '{command}' target ---")
+        if command == "SmartechNCE":
+            product_type = "com.apple.product-type.app-extension.notification-content"
+        elif command == "SmartechNSE":
+            product_type = "com.apple.product-type.app-extension.notification-service"
+        else:
+            product_type = ""
+
+        subprocess.run([
+            "ruby",
+            ruby_script_name,
+            project_basename,
+            command,
+            product_type # Pass the product type to the Ruby script
+        ], check=True, cwd=os.path.dirname(xcodeproj_path), capture_output=False) # Run from 'ios' dir
+
+    except subprocess.CalledProcessError as e:
+        print(f"❌ An error occurred while running the Ruby script for {command}.")
+        print(f"   Stderr: {e.stderr.decode() if e.stderr else 'N/A'}")
+        print(f"   Stdout: {e.stdout.decode() if e.stdout else 'N/A'}")
+    except Exception as e:
+        print(f"❌ An unexpected error occurred: {e}")
+    finally:
+        # Clean up the script file
+        if os.path.exists(ruby_script_path):
+            os.remove(ruby_script_path)
+
 
 def ensure_podfile_exists_and_install(ios_project_path):
     podfile_path = os.path.join(ios_project_path, "Podfile")
@@ -1014,15 +1056,14 @@ def ensure_podfile_exists_and_install(ios_project_path):
     else:
         print("Podfile already exists.")
     # Always run pod install to ensure workspace is set up
-    print("Running 'pod install'...")
-    result = subprocess.run(["pod", "install"], cwd=ios_project_path)
-    if result.returncode != 0:
-        print("❌ Failed to run 'pod install'. Please check your Podfile and CocoaPods setup.")
-        sys.exit(1)
-    print("✅ 'pod install' completed.")
-
+        print("Running 'pod install'...")
+        result = subprocess.run(["pod", "install"], cwd=ios_project_path)
+        if result.returncode != 0:
+            print("❌ Failed to run 'pod install'. Please ensure CocoaPods is installed.")
+            sys.exit(1)
+        print("✅ Pods installed.")
+        
 def get_url_scheme_from_user():
-    print("\n--- URL Scheme Configuration ---")
     while True:
         url_scheme = input("Enter a custom URL scheme for your app (e.g., myapp): ").strip()
         if url_scheme:
@@ -1035,6 +1076,12 @@ def main():
     # Ask for app type and set use_override flag
     app_type = ask_app_type()
     use_override = (app_type == 2)  # True for Flutter, False otherwise
+
+        # Set ios_project_path based on app type
+    if app_type == 1:  # Native iOS
+        ios_project_path = os.getcwd()
+    else:  # Flutter, React Native, Cordova, Ionic
+        ios_project_path = os.path.join(os.getcwd(), "ios")
 
     ios_project_path = os.path.join(os.getcwd(), "ios")
     ensure_podfile_exists_and_install(ios_project_path)
@@ -1073,22 +1120,29 @@ def main():
 
     # --- Ensure main target capabilities using Ruby script ---
     xcodeproj_name = find_xcodeproj_name(ios_project_path)
-    if xcodeproj_name:
-        xcodeproj_path = os.path.join(ios_project_path, xcodeproj_name)
-        enable_location = smartech_user_data.get("SmartechAutoFetchLocation", False)
-        # Before calling ensure_capabilities_with_ruby(...)
-        ensure_capabilities_rb_path = os.path.join("ios", "ensure_capabilities.rb")
-        if not os.path.exists(ensure_capabilities_rb_path):
-            write_ensure_capabilities_ruby_script(ensure_capabilities_rb_path)
+    ensure_capabilities_rb_path = os.path.join("ios", "ensure_capabilities.rb")
+    try:
+        if xcodeproj_name:
+            xcodeproj_path = os.path.join(ios_project_path, xcodeproj_name)
+            if not os.path.exists(ensure_capabilities_rb_path):
+                write_ensure_capabilities_ruby_script(ensure_capabilities_rb_path)
 
-        # Now safe to call
-        ensure_capabilities_with_ruby(
-            xcodeproj_path,
-            smartech_user_data["SmartechAppGroup"],  # This should be the real app group, not the extension name
-            enable_location
-        )
-    else:
-        print("⚠️  Could not detect an .xcodeproj in the ios directory for capability checks.")
+            # Now safe to call
+            ensure_capabilities_with_ruby(
+                xcodeproj_path,
+                smartech_user_data["SmartechAppGroup"],
+            )
+        else:
+            print("⚠️  Could not detect an .xcodeproj in the ios directory for capability checks.")
+        # ...rest of your main() code...
+    finally:
+        # Clean up ensure_capabilities.rb after use
+        if os.path.exists(ensure_capabilities_rb_path):
+            try:
+                os.remove(ensure_capabilities_rb_path)
+                print("🧹 Removed ensure_capabilities.rb after processing.")
+            except Exception as e:
+                print(f"⚠️ Could not remove ensure_capabilities.rb: {e}")
 
     # --- Modifying Info.plist: {plist_path} ---
     backup_plist_path = plist_path + '.backup'
@@ -1187,17 +1241,15 @@ def main():
     # --- Add SmartechNCE and SmartechNSE as Xcode targets using Ruby ---
     if xcodeproj_name:
         xcodeproj_path = os.path.join(ios_project_path, xcodeproj_name)
+        # Call for Notification Content Extension
         add_target_with_ruby(
             xcodeproj_path,
-            "SmartechNCE",
-            os.path.join("SmartechNCE", "Info.plist"),
-            os.path.join("SmartechNCE", "SmartechNCE.entitlements")
+            "SmartechNCE"
         )
+        # Call for Notification Service Extension
         add_target_with_ruby(
             xcodeproj_path,
-            "SmartechNSE",
-            os.path.join("SmartechNSE", "Info.plist"),
-            os.path.join("SmartechNSE", "SmartechNSE.entitlements")
+            "SmartechNSE"
         )
     else:
         print("⚠️  Could not add extension targets because .xcodeproj was not found.")
@@ -1223,7 +1275,7 @@ def ensure_smartech_extension_targets_in_podfile(podfile_path, is_flutter):
         print(f"⚠️  Podfile not found at {podfile_path}. Skipping Podfile extension target addition.")
         return
 
-    # Remove any existing SmartechNSE/NCE extension targets at the end (idempotency)
+    # Remove any existing SmartechNSE/NCE extension targets
     content = re.sub(
         r"#service extension target\s*target 'SmartechNSE'.*?end\s*#content extension target\s*target 'SmartechNCE'.*?end\s*",
         "",
@@ -1232,31 +1284,29 @@ def ensure_smartech_extension_targets_in_podfile(podfile_path, is_flutter):
     )
 
     use_fw = "  use_frameworks!\n" if is_flutter else ""
-    nse_block = (
-        "#service extension target\n"
+    extension_targets = (
+        "\n#service extension target\n"
         "target 'SmartechNSE' do\n"
-        "  inherit! :search_paths\n"
         f"{use_fw}"
         "  pod 'SmartPush-iOS-SDK'\n"
         "end\n\n"
-    )
-    nce_block = (
         "#content extension target\n"
         "target 'SmartechNCE' do\n"
-        "  inherit! :search_paths\n"
         f"{use_fw}"
         "  pod 'SmartPush-iOS-SDK'\n"
         "end\n"
     )
 
-    if not content.endswith('\n'):
-        content += '\n'
-
-    content += nse_block + nce_block
+    # Add extension targets at the end of the file
+    if content.rstrip().endswith('end'):
+        # If file ends with 'end', add a newline before adding extensions
+        content = content.rstrip() + "\n" + extension_targets
+    else:
+        content = content.rstrip() + extension_targets
 
     with open(podfile_path, 'w', encoding='utf-8') as f:
         f.write(content)
-    print("✅ SmartechNSE and SmartechNCE targets ensured in Podfile")
+    print("✅ SmartechNSE and SmartechNCE targets added to Podfile")
 
 def ask_app_type():
     print("\nWhat type of app are you integrating Smartech with?")
@@ -1275,7 +1325,3 @@ def ask_app_type():
 # --- Execute the main routine ---
 if __name__ == "__main__":
     main()
-
-
-
-

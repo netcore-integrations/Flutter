@@ -39,15 +39,15 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>smartechdemo</string>
+				<string>savopen</string>
 			</array>
 		</dict>
 		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>smartechdemo</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>savopen</string>
+				<string>smartechdemo</string>
 			</array>
 		</dict>
 	</array>
