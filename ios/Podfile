@@ -53,22 +53,12 @@ end
 
 #service extension target
 target 'SmartechNSE' do
-  ###
   use_frameworks!
-
-  # Pods for 'YourServiceExtensionTarget'
-   pod 'SmartPush-iOS-SDK', '~> 3.5.5'
-
-
+  pod 'SmartPush-iOS-SDK'
 end
 
 #content extension target
 target 'SmartechNCE' do
-  ####
   use_frameworks!
-
-  # Pods for 'YourContentExtensionTarget'
-   pod 'SmartPush-iOS-SDK', '~> 3.5.5'
-
-
+  pod 'SmartPush-iOS-SDK'
 end

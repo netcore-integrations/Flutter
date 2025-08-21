@@ -328,6 +328,10 @@ class _OtpScreenState extends State<OtpScreen> {
                       pref.setString("mobileNumber", widget.mobileNumber);
                       pref.setBool("isLoggedIn", true);
                       Smartech().login(widget.mobileNumber);
+                      Smartech().updateUserProfile({
+                        "NAME":"Keshav",
+                        "LOCATION":"DELHI",
+                      });
                       Navigator.of(context).pushAndRemoveUntil<dynamic>(
                           MaterialPageRoute(
                             builder: (context) =>

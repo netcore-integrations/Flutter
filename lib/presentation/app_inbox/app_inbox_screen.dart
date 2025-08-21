@@ -127,25 +127,25 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
                     .toList() ??
                 [])
         .then((value) {
-      if (value != null) {
-        inboxList.addAll(value);
-        for (int i = 0; i < inboxList.length; i++) {
-          String status = inboxList[i].smtPayload!.status.toLowerCase();
-          print("************status:" + status);
-          //this one for unread messages
-          // if (status == 'delivered' || status == 'viewed') {
-          //   newinboxList.add(inboxList[i]);
-          // }
-          //this one for read messages
-          if (status == 'clicked') {
-            newinboxList.add(inboxList[i]);
-            print("new message: " + newinboxList[i].smtPayload!.status);
-            // print("new message: " + inboxList[i].smtPayload!.status);
-          }
-        }
-      }
-      // log(inboxList.toString());
-      setState(() {});
+      // if (value != null) {
+      //   inboxList.addAll(value);
+      //   for (int i = 0; i < inboxList.length; i++) {
+      //     String status = inboxList[i].smtPayload!.status.toLowerCase();
+      //     print("************status:" + status);
+      //     //this one for unread messages
+      //     if (status == 'delivered' || status == 'viewed') {
+      //       newinboxList.add(inboxList[i]);
+      //     }
+      //     //this one for read messages
+      //     // if (status == 'clicked') {
+      //     //   newinboxList.add(inboxList[i]);
+      //     //   print("new message: " + newinboxList[i].smtPayload!.status);
+      //     //   // print("new message: " + inboxList[i].smtPayload!.status);
+      //     // }
+      //   }
+      // }
+      // // log(inboxList.toString());
+      // setState(() {});
     });
   }
 
@@ -165,15 +165,16 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
   getMessagesList() async {
     // inboxList = [];
     await SmartechAppinbox().getAppInboxMessages().then((value) {
-      // log("*****************");
-      // log(value!.first.smtPayload!.status.toString());
-      // log("*****************");
-      // if (value != null) {
-      //   inboxList.addAll(value);
-      // }
-      // setState(() {});
-      // log(inboxList.toString());
-      // print(value);
+      log("*****************");
+      log(value!.first.smtPayload!.status.toString());
+      log("*****************");
+
+      if (value != null) {
+        inboxList.addAll(value);
+      }
+      setState(() {});
+      print("getMessagesfrommDB: " + inboxList.toString());
+      print(value);
     });
   }
 
@@ -286,7 +287,8 @@ class _SMTAppInboxScreenState extends State<SMTAppInboxScreen> {
                     child: ListView.builder(
                       itemCount: newinboxList.length,
                       itemBuilder: (BuildContext context, int index) {
-                        print("New Length: " + newinboxList.length.toString());
+                        print("Timestamp: " + newinboxList[index].smtPayload!.timestamp);
+                        print("Published date: " + newinboxList[index].smtPayload!.publishedDate.toString());
                         switch (newinboxList[index].smtPayload!.type) {
                           // ******* Image type Notifications ******* \\
                           case SMTNotificationType.image:

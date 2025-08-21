@@ -65,7 +65,7 @@ class _HomeScreen1State extends State<HomeScreen1> {
     //encode Map to JSON
     var body = json.encode(data);
     var response =
-          await dio.Dio().post("https://fabfurni.com/api/Webservice/category",
+          await dio.Dio().post("https://google.com/api/Webservice/category",
             options: dio.Options(
               headers: {
                 "Content-Type": "application/json",
@@ -111,7 +111,7 @@ class _HomeScreen1State extends State<HomeScreen1> {
     //encode Map to JSON
     var body = json.encode(data);
     var response =
-        await dio.Dio().post("https://fabfurni.com/api/Webservice/dashboard",
+        await dio.Dio().post("https://google.com/api/Webservice/dashboard",
             options: dio.Options(
               headers: {
                 "Content-Type": "application/json",

@@ -13,6 +13,7 @@ import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartech_appinbox/smartech_appinbox.dart';
 import 'package:smartech_base/smartech_base.dart';
+import 'package:smartech_nudges/netcore_px.dart';
 
 import '../../screenwithoutlogin/sidebarmenu.dart';
 import '../resetPassword/resetpasswordafterlogin.dart';
@@ -513,6 +514,7 @@ class _ProfileOneScreenState extends State<ProfileOneScreen> {
                                 await SharedPreferences.getInstance();
                             prefs.clear();
                             Smartech().logoutAndClearUserIdentity(true);
+                            NetcorePX.instance.clearUserId();
                             Navigator.of(context, rootNavigator: true)
                                 .pushAndRemoveUntil(
                                     new MaterialPageRoute(

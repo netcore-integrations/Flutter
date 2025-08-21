@@ -34,22 +34,15 @@ void main() async {
   if (!kIsWeb) {
     await Firebase.initializeApp();
   } else {
-    await Firebase.initializeApp(options: FirebaseOptions(
-        apiKey: "AIzaSyAyoGDHO83zRE-iNren011TmrR3Y0Xxm50",
-
-        authDomain: "fabfurni.firebaseapp.com",
-
-        projectId: "fabfurni",
-
-        storageBucket: "fabfurni.firebasestorage.app",
-
-        messagingSenderId: "893910930509",
-
-        appId: "1:893910930509:web:9e6d17e3d82499e6e07804",
-
-        measurementId: "G-4YLYZ1EXJL"
-
-    ));
+    await Firebase.initializeApp(
+        options: FirebaseOptions(
+            apiKey: "AIzaSyAyoGDHO83zRE-iNren011TmrR3Y0Xxm50",
+            authDomain: "fabfurni.firebaseapp.com",
+            projectId: "fabfurni",
+            storageBucket: "fabfurni.firebasestorage.app",
+            messagingSenderId: "893910930509",
+            appId: "1:893910930509:web:9e6d17e3d82499e6e07804",
+            measurementId: "G-4YLYZ1EXJL"));
   }
   await FirebaseMessaging.instance.setAutoInitEnabled(true);
 
@@ -101,11 +94,12 @@ void main() async {
       Map<dynamic, dynamic>? smtCustomPayload) async {
     // String deeplink1=smtDeeplink!;
     // print(deeplink1);
-    print('$smtDeeplink');
-    
+    print(smtDeeplink);
+    print(smtCustomPayload!.entries.first.key);
+    print(smtCustomPayload!.entries.first.value);
 
-    Future.delayed(const Duration(milliseconds: 2500), () async {
-      if (smtDeeplinkSource == 'PushNotification') {
+    if (smtDeeplinkSource == 'PushNotification') {
+      Future.delayed(const Duration(milliseconds: 2500), () async {
         print(smtDeeplink);
         String deeplink = smtDeeplink!.substring(0, smtDeeplink.indexOf('?'));
         if (deeplink == '/about_us_screen') {
@@ -124,27 +118,38 @@ void main() async {
           // await
           // FlutterWebBrowser.openWebPage(url: smtDeeplink);
         }
-      }
-      if (smtDeeplinkSource == 'InAppMessage') {
-        // print(smtDeeplink);
-        if (smtDeeplink == '/about_us_screen') {
+      });
+    }
+
+    if (smtDeeplinkSource == 'InAppMessage') {
+      // print(smtDeeplink);
+      if (smtDeeplink == 'deeplink-click') {
+        if (smtCustomPayload!.entries.first.key == 'redirect' &&
+            smtCustomPayload!.entries.first.value == '/about_us_screen') {
           Get.toNamed(AppRoutes.aboutUsScreen);
         }
-        if (smtDeeplink == '/terms_of_condition_screen') {
+        if (smtCustomPayload!.entries.first.key == 'redirect' &&
+           smtCustomPayload!.entries.first.value == '/terms_of_condition_screen') {
           Get.toNamed(AppRoutes.termsOfConditionScreen);
         }
-        if (smtDeeplink == '/log_in_screen') {
-          Get.toNamed(AppRoutes.logInScreen);
-        }
-        if (smtDeeplink!.contains("https")) {
-          print("navigate to browser with url");
-          final Uri _url = Uri.parse(smtDeeplink);
-          if (!await launchUrl(_url)) throw 'Could not launch $_url';
-          // await
-          // FlutterWebBrowser.openWebPage(url: smtDeeplink);
-        }
       }
-    });
+      // if (smtDeeplink == '/about_us_screen') {
+      //   Get.toNamed(AppRoutes.aboutUsScreen);
+      // }
+      // if (smtDeeplink == '/terms_of_condition_screen') {
+      //   Get.toNamed(AppRoutes.termsOfConditionScreen);
+      // }
+      // if (smtDeeplink == '/log_in_screen') {
+      //   Get.toNamed(AppRoutes.logInScreen);
+      // }
+      // if (smtDeeplink!.contains("https")) {
+      //   print("navigate to browser with url");
+      //   final Uri _url = Uri.parse(smtDeeplink);
+      //   if (!await launchUrl(_url)) throw 'Could not launch $_url';
+      //   // await
+      //   // FlutterWebBrowser.openWebPage(url: smtDeeplink);
+      // }
+    }
   });
   // handleUrl(
   //     'https://elink.savmoney.me/vtrack?clientid=170681&ul=BgVRBlNEBR5TX15DB154R1VASw4KWVYdTx4=&ml=BA9VSFJEA1MESw==&sl=dUolSDdrSTF9Y0tUClBWXxpFBBUIWF0BSkwLU0xQ&pp=0&c=0000&fl=X0ISRBECGk1DVkFQFkkWVURGSw8MWVhLew88UHkiXFZrI1M=&ext=');
@@ -168,7 +173,7 @@ Future<String> resolveUrl(String url) async {
     );
     print('Status code: ${response.statusCode}');
     print('Repsonse: ${response}');
-    response1=response.toString();
+    response1 = response.toString();
     if (response.statusCode == 200 || response.statusCode == 302) {
       // Successfully resolved the link, return the resulting URL
       // res=response..toString();
@@ -292,7 +297,7 @@ class _MyAppState extends State<MyApp> {
     // Navigator.of(context).push(MaterialPageRoute(
     //   builder: (context) => HtmlPAGE(),
     // ));
-    Get.toNamed(AppRoutes.htmlscreen,arguments: [response1]);
+    Get.toNamed(AppRoutes.htmlscreen, arguments: [response1]);
     // Get.toNamed(AppRoutes.aboutUsScreen);
     // _navigatorKey.currentState?.pushNamed(uri.fragment);
   }

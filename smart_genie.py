@@ -615,6 +615,19 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
 def create_smartech_extensions(smartech_app_group, smartech_app_id, ios_project_path):
     print("\n--- Creating Smartech Extension Files ---")
     
+    # Determine versions from main app Info.plist (fallback to 1.0 / 1)
+    main_info_plist = os.path.join(ios_project_path, "Runner", "Info.plist")
+    marketing_version = "1.0"
+    project_version = "1"
+    try:
+        if os.path.exists(main_info_plist):
+            with open(main_info_plist, 'rb') as f:
+                main_plist_data = plistlib.load(f)
+                marketing_version = str(main_plist_data.get("CFBundleShortVersionString", marketing_version))
+                project_version = str(main_plist_data.get("CFBundleVersion", project_version))
+    except Exception:
+        pass
+    
     # --- SmartechNCE (Notification Content Extension) ---
     nce_path = os.path.join(ios_project_path, "SmartechNCE")
     os.makedirs(nce_path, exist_ok=True)
@@ -622,8 +635,8 @@ def create_smartech_extensions(smartech_app_group, smartech_app_id, ios_project_
     nce_info = {
         "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)", "CFBundleName": "$(PRODUCT_NAME)",
         "CFBundleDevelopmentRegion": "$(DEVELOPMENT_LANGUAGE)", "CFBundleDisplayName": "SmartechNCE",
-        "CFBundlePackageType": "$(PRODUCT_BUNDLE_PACKAGE_TYPE)", "CFBundleShortVersionString": "$(MARKETING_VERSION)",
-        "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)", "NSExtension": {
+        "CFBundleExecutable": "$(EXECUTABLE_NAME)", "CFBundlePackageType": "$(PRODUCT_BUNDLE_PACKAGE_TYPE)",
+        "CFBundleShortVersionString": "$(MARKETING_VERSION)", "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)", "NSExtension": {
             "NSExtensionPointIdentifier": "com.apple.usernotifications.content-extension",
             "NSExtensionMainStoryboard": "MainInterface", "NSExtensionAttributes": {
                 "UNNotificationExtensionCategory": ["SmartechCarouselLandscapeNotification", "SmartechCarouselPortraitNotification", "SmartechPN"],
@@ -722,10 +735,10 @@ class NotificationViewController: SMTCustomNotificationViewController {
     os.makedirs(nse_path, exist_ok=True)
     
     nse_info = {
-        "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)", "CFBundleName": "$(PRODUCT_NAME)",
+         "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)", "CFBundleName": "$(PRODUCT_NAME)",
         "CFBundleDevelopmentRegion": "$(DEVELOPMENT_LANGUAGE)", "CFBundleDisplayName": "SmartechNSE",
-        "CFBundlePackageType": "$(PRODUCT_BUNDLE_PACKAGE_TYPE)", "CFBundleShortVersionString": "$(MARKETING_VERSION)",
-        "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)", "NSExtension": {
+        "CFBundleExecutable": "$(EXECUTABLE_NAME)", "CFBundlePackageType": "$(PRODUCT_BUNDLE_PACKAGE_TYPE)",
+        "CFBundleShortVersionString": "$(MARKETING_VERSION)", "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)", "NSExtension": {
             "NSExtensionPointIdentifier": "com.apple.usernotifications.service",
             "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).NotificationService"
         },
@@ -832,6 +845,11 @@ def write_ruby_add_target_script(script_path):
     # This is a merged and improved script.
     # It combines the successful target creation logic from your script (which provides the correct icons and tabs)
     # with the detailed build settings and file handling from the previous version (which ensures 'pod install' works).
+    #
+    # IMPORTANT: Do NOT override the target.product_type with non-existent strings like
+    # "com.apple.product-type.app-extension.notification-service". The correct product type for
+    # both Notification Service and Notification Content extensions is simply
+    # "com.apple.product-type.app-extension" and is set automatically by new_target(:app_extension,...).
     ruby_code = r"""
 require 'xcodeproj'
 require 'pathname'
@@ -861,25 +879,30 @@ def embed_extension_in_main_target(project, extension_target)
     puts "ℹ️  #{extension_target.name} already embedded in main target."
   end
 end
-
-
-def add_extension_target(project_path, target_name, product_type, info_plist, entitlements, source_files, resource_files)
+def add_extension_target(project_path, target_name, info_plist, entitlements, source_files, resource_files)
   project = Xcodeproj::Project.open(project_path)
   
-  if project.targets.any? { |t| t.name == target_name }
-      puts "ℹ️  Target '#{target_name}' already exists. Skipping creation."
-      return
+  existing = project.targets.find { |t| t.name == target_name }
+  if existing
+      puts "ℹ️  Target '#{target_name}' already exists. Will update settings and file references."
+      target = existing
+  else
+      puts "Creating new target '#{target_name}'..."
+      target = project.new_target(:app_extension, target_name, :ios, '13.0')
   end
-
-  puts "Creating new target '#{target_name}'..."
-  target = project.new_target(:app_extension, target_name, :ios, '13.0')
-  target.product_type = product_type
 
   # --- Merged Logic ---
   # 1. Using the robust build settings required for CocoaPods.
   # 2. Using your successful logic for deriving the bundle identifier.
   main_target = project.targets.find { |t| t.symbol_type == :application }
-  main_bundle_id = main_target.build_configurations[0].build_settings['PRODUCT_BUNDLE_IDENTIFIER']
+  main_bundle_id = nil
+  main_marketing_version = nil
+  main_project_version = nil
+  if main_target && main_target.build_configurations[0]
+    main_bundle_id = main_target.build_configurations[0].build_settings['PRODUCT_BUNDLE_IDENTIFIER']
+    main_marketing_version = main_target.build_configurations[0].build_settings['MARKETING_VERSION']
+    main_project_version = main_target.build_configurations[0].build_settings['CURRENT_PROJECT_VERSION']
+  end
 
   target.build_configurations.each do |config|
     config.build_settings.merge!({
@@ -890,6 +913,11 @@ def add_extension_target(project_path, target_name, product_type, info_plist, en
         'TARGETED_DEVICE_FAMILY' => '1,2',
         'CODE_SIGN_STYLE' => 'Automatic',
         'LD_RUNPATH_SEARCH_PATHS' => '$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks',
+        'SKIP_INSTALL' => 'YES',
+        # Ensure Info.plist version keys resolve for simulator installation
+        'PRODUCT_BUNDLE_PACKAGE_TYPE' => 'XPC!',
+        'MARKETING_VERSION' => (main_marketing_version || '1.0'),
+        'CURRENT_PROJECT_VERSION' => (main_project_version || '1')
     })
     
     # Set Bundle ID based on main app's ID
@@ -912,6 +940,18 @@ def add_extension_target(project_path, target_name, product_type, info_plist, en
   group.set_source_tree('<group>')
   group.set_path(target_name)
 
+  # Ensure Info.plist and Entitlements are visible in the navigator (not added to build phases)
+  begin
+    group.new_file(File.basename(info_plist)) if info_plist && !info_plist.empty?
+  rescue => e
+    puts "⚠️  Could not add Info.plist reference: #{e}"
+  end
+  begin
+    group.new_file(File.basename(entitlements)) if entitlements && !entitlements.empty?
+  rescue => e
+    puts "⚠️  Could not add entitlements reference: #{e}"
+  end
+
   # Add source files to the "Compile Sources" build phase
   source_files.each do |file_path|
       file_ref = group.new_file(File.basename(file_path))
@@ -919,11 +959,7 @@ def add_extension_target(project_path, target_name, product_type, info_plist, en
   end
 
   # Add resource files to the "Copy Bundle Resources" build phase
-  all_resource_files = resource_files + [info_plist]
-  if entitlements && !entitlements.empty?
-      all_resource_files << entitlements
-  end
-  resource_refs = all_resource_files.map { |f| group.new_file(File.basename(f)) }
+  resource_refs = resource_files.map { |f| group.new_file(File.basename(f)) }
   target.add_resources(resource_refs)
 
   embed_extension_in_main_target(project, target)
@@ -941,7 +977,6 @@ command = ARGV[1]
 if command == "SmartechNCE"
     add_extension_target(
         xcodeproj_path, "SmartechNCE",
-        "com.apple.product-type.app-extension.notification-content",
         "SmartechNCE/Info.plist", "SmartechNCE/SmartechNCE.entitlements",
         ["SmartechNCE/NotificationViewController.swift"],
         ["SmartechNCE/MainInterface.storyboard", "SmartechNCE/Media.xcassets"]
@@ -949,7 +984,6 @@ if command == "SmartechNCE"
 elsif command == "SmartechNSE"
     add_extension_target(
         xcodeproj_path, "SmartechNSE",
-        "com.apple.product-type.app-extension.notification-service",
         "SmartechNSE/Info.plist", "SmartechNSE/SmartechNSE.entitlements",
         ["SmartechNSE/NotificationService.swift"], []
     )
@@ -972,19 +1006,12 @@ def add_target_with_ruby(xcodeproj_path, command):
         project_basename = os.path.basename(xcodeproj_path)
 
         print(f"\n--- Running Ruby script to configure '{command}' target ---")
-        if command == "SmartechNCE":
-            product_type = "com.apple.product-type.app-extension.notification-content"
-        elif command == "SmartechNSE":
-            product_type = "com.apple.product-type.app-extension.notification-service"
-        else:
-            product_type = ""
 
         subprocess.run([
             "ruby",
             ruby_script_name,
             project_basename,
-            command,
-            product_type # Pass the product type to the Ruby script
+            command
         ], check=True, cwd=os.path.dirname(xcodeproj_path), capture_output=False) # Run from 'ios' dir
 
     except subprocess.CalledProcessError as e:
@@ -1009,19 +1036,12 @@ def add_target_with_ruby(xcodeproj_path, command):
         project_basename = os.path.basename(xcodeproj_path)
 
         print(f"\n--- Running Ruby script to configure '{command}' target ---")
-        if command == "SmartechNCE":
-            product_type = "com.apple.product-type.app-extension.notification-content"
-        elif command == "SmartechNSE":
-            product_type = "com.apple.product-type.app-extension.notification-service"
-        else:
-            product_type = ""
 
         subprocess.run([
             "ruby",
             ruby_script_name,
             project_basename,
-            command,
-            product_type # Pass the product type to the Ruby script
+            command
         ], check=True, cwd=os.path.dirname(xcodeproj_path), capture_output=False) # Run from 'ios' dir
 
     except subprocess.CalledProcessError as e:
@@ -1056,12 +1076,12 @@ def ensure_podfile_exists_and_install(ios_project_path):
     else:
         print("Podfile already exists.")
     # Always run pod install to ensure workspace is set up
-        print("Running 'pod install'...")
-        result = subprocess.run(["pod", "install"], cwd=ios_project_path)
-        if result.returncode != 0:
-            print("❌ Failed to run 'pod install'. Please ensure CocoaPods is installed.")
-            sys.exit(1)
-        print("✅ Pods installed.")
+    print("Running 'pod install'...")
+    result = subprocess.run(["pod", "install"], cwd=ios_project_path)
+    if result.returncode != 0:
+        print("❌ Failed to run 'pod install'. Please ensure CocoaPods is installed.")
+        sys.exit(1)
+    print("✅ Pods installed.")
         
 def get_url_scheme_from_user():
     while True:
@@ -1258,6 +1278,18 @@ def main():
     podfile_path = os.path.join(ios_project_path, "Podfile")
     is_flutter = (app_type == 2)
     ensure_smartech_extension_targets_in_podfile(podfile_path, is_flutter)
+    
+    # --- Final pod install after all changes ---
+    try:
+        print("Running final 'pod install'...")
+        result = subprocess.run(["pod", "install"], cwd=ios_project_path)
+        if result.returncode != 0:
+            print("❌ Failed to run final 'pod install'. Please ensure CocoaPods is installed.")
+            sys.exit(1)
+        print("✅ Final 'pod install' completed.")
+    except FileNotFoundError:
+        print("❌ CocoaPods not found. Please install CocoaPods (gem install cocoapods) and re-run.")
+        sys.exit(1)
     
 def ensure_capabilities_with_ruby(xcodeproj_path, app_group_id):
     ruby_script = "ensure_capabilities.rb"
