@@ -40,18 +40,19 @@ import subprocess
 import shutil
 
 EXCLUDE_DIRS = ['/build/', '/Pods/', '/DerivedData/', '/.git/', '/Carthage/', '/Vendor/', '/Frameworks/']
+CURRENT_APP_TYPE = None  # 1: Native iOS, 2: Flutter, 3: React Native, 4: Cordova, 5: Ionic
 DEFAULT_INDENT = "    "
 
 # --- Markers ---
-SMARTECH_DID_FINISH_LAUNCHING_MARKER_START = "// SMARTECH_INIT_BY_SCRIPT_START"
-SMARTECH_DID_REGISTER_TOKEN_MARKER = "// SMARTECH_DID_REGISTER_TOKEN_BY_SCRIPT"
-SMARTECH_DID_FAIL_REGISTER_MARKER = "// SMARTECH_DID_FAIL_REGISTER_BY_SCRIPT"
-SMARTECH_WILL_PRESENT_MARKER = "// SMARTECH_WILL_PRESENT_BY_SCRIPT"
-SMARTECH_DID_RECEIVE_MARKER = "// SMARTECH_DID_RECEIVE_BY_SCRIPT"
-SMARTECH_OPEN_URL_MARKER_START = "// SMARTECH_OPEN_URL_BY_SCRIPT_START"
+SMARTECH_DID_FINISH_LAUNCHING_MARKER_START = "// SMARTECH_INIT_START"
+SMARTECH_DID_REGISTER_TOKEN_MARKER = "// SMARTECH_DID_REGISTER_TOKEN"
+SMARTECH_DID_FAIL_REGISTER_MARKER = "// SMARTECH_DID_FAIL_REGISTER"
+SMARTECH_WILL_PRESENT_MARKER = "// SMARTECH_WILL_PRESENT"
+SMARTECH_DID_RECEIVE_MARKER = "// SMARTECH_DID_RECEIVE"
+SMARTECH_OPEN_URL_MARKER_START = "// SMARTECH_OPEN_URL_START"
 SMARTECH_OPEN_URL_MARKER_END = "// SMARTECH_OPEN_URL_BY_SCRIPT_END"
-SMARTECH_DEEPLINK_HANDLER_MARKER = "// SMARTECH_DEEPLINK_HANDLER_BY_SCRIPT"
-SMARTECH_UNCENTERDELEGATE_MARKER = "// SMARTECH_UNCENTERDELEGATE_BY_SCRIPT"
+SMARTECH_DEEPLINK_HANDLER_MARKER = "// SMARTECH_DEEEPLINK_HANDLER"
+SMARTECH_UNCENTERDELEGATE_MARKER = "// SMARTECH_UNCENTERDELEGATE"
 
 def fix_shellscript_arrays_in_pbxproj(pbxproj_path):
     if not os.path.isfile(pbxproj_path):
@@ -131,12 +132,14 @@ def find_info_plist(exclusions):
         print(f"Success: Found unique Info.plist at: {found_path}")
         return found_path
 
-def find_app_delegate_details(exclusions):
+def find_app_delegate_details(exclusions, search_root="."):
     print("\n--- Searching for App Entry Point (AppDelegate/SwiftUI App) ---")
     app_delegate_info = None
     try:
-        swift_delegate_files = filter_paths(glob.glob('./ios/**/AppDelegate.swift', recursive=True), exclusions)
-        objc_delegate_files = filter_paths(glob.glob('./ios/**/AppDelegate.m', recursive=True), exclusions)
+        swift_delegate_glob = os.path.join(search_root, "**", "AppDelegate.swift")
+        objc_delegate_glob = os.path.join(search_root, "**", "AppDelegate.m")
+        swift_delegate_files = filter_paths(glob.glob(swift_delegate_glob, recursive=True), exclusions)
+        objc_delegate_files = filter_paths(glob.glob(objc_delegate_glob, recursive=True), exclusions)
         potential_delegates = []
         if swift_delegate_files:
             potential_delegates.extend([{'path': p, 'name': 'AppDelegate', 'language': 'swift'} for p in swift_delegate_files])
@@ -156,7 +159,8 @@ def find_app_delegate_details(exclusions):
         return {'error': "Python 3.5+ Required"}
     if not app_delegate_info:
         try:
-            swift_files = filter_paths(glob.glob('./ios/**/*.swift', recursive=True), exclusions)
+            swift_files_glob = os.path.join(search_root, "**", "*.swift")
+            swift_files = filter_paths(glob.glob(swift_files_glob, recursive=True), exclusions)
             swiftui_app_regex = re.compile(r"@main\s+(?:public\s+)?struct\s+([\w]+)\s*:\s*App")
             for file_path in swift_files:
                 try:
@@ -216,6 +220,18 @@ def get_hansel_keys_from_user():
     except (EOFError, KeyboardInterrupt):
         print("\nInput cancelled. Hansel configuration skipped.")
         return None, True
+
+def ask_config_location():
+    print("\nWhere do you want to place Smartech/Hansel config?")
+    print("1. Info.plist (default)")
+    print("2. AppDelegate")
+    while True:
+        choice = input("Enter 1 or 2: ").strip()
+        if choice == '1':
+            return 'plist'
+        if choice == '2':
+            return 'app_delegate'
+        print("Invalid input. Please enter 1 or 2.")
 
 def get_indentation(line_content):
     match = re.match(r"^(\s*)", line_content)
@@ -306,6 +322,78 @@ def add_uncenterdelegate_if_needed(lines, language, class_name="AppDelegate"):
         print(f"      Could not automatically add UNUserNotificationCenterDelegate conformance.")
         return lines, False
 
+
+def add_protocols_if_needed(lines, language, protocols_to_add, class_name="AppDelegate"):
+    print(f"   Ensuring protocol conformances: {', '.join(protocols_to_add)}...")
+    class_def_line_idx = find_class_definition_line(lines, language, class_name)
+    if class_def_line_idx == -1:
+        print(f"      Error: Could not find class definition for '{class_name}'. Skipping protocol additions.")
+        return lines, False
+    class_line_content = lines[class_def_line_idx]
+    modified = False
+    if language == 'swift':
+        parts = class_line_content.split('{', 1)
+        class_header = parts[0].rstrip()
+        body_start = " {" + parts[1] if len(parts) > 1 else " {"
+        if ':' in class_header:
+            header_left, header_right = class_header.split(':', 1)
+            existing_protocols = [p.strip() for p in header_right.split(',')]
+            missing = [p for p in protocols_to_add if p not in existing_protocols]
+            if missing:
+                new_right = ', '.join(existing_protocols + missing)
+                lines[class_def_line_idx] = f"{header_left}: {new_right}{body_start}"
+                modified = True
+        else:
+            new_right = ', '.join(protocols_to_add)
+            lines[class_def_line_idx] = f"{class_header}: {new_right}{body_start}"
+            modified = True
+    elif language == 'objc':
+        interface_match = re.match(r"(\s*@interface\s+\w+\s*:\s*\w+\s*)(<[^>]*>)?(.*)", class_line_content)
+        if interface_match:
+            prefix, protocols_group, suffix = interface_match.groups()
+            current = []
+            if protocols_group:
+                current = [p.strip() for p in protocols_group[1:-1].split(',') if p.strip()]
+            for p in protocols_to_add:
+                if p not in current:
+                    current.append(p)
+            lines[class_def_line_idx] = f"{prefix}<{', '.join(current)}>{suffix}\n"
+            modified = True
+    if modified:
+        print("      Added missing protocol conformances.")
+    else:
+        print("      All protocol conformances already present.")
+    return lines, modified
+
+
+def ensure_imports(lines, language, hansel_enabled=False, is_react_native=False):
+    print("   Ensuring required SDK imports...")
+    if language == 'swift':
+        required = ["import Smartech", "import SmartPush"]
+        if hansel_enabled:
+            required.append("import SmartechNudges")
+    else:
+        required = ["#import <Smartech/Smartech.h>", "#import <SmartPush/SmartPush.h>"]
+        if hansel_enabled:
+            required.append("#import <SmartechNudges/SmartechNudges.h>")
+        if is_react_native:
+            required.extend([
+                "#import \"SmartechBaseReactNative.h\"",
+                "#import \"SmartechRCTEventEmitter.h\"",
+            ])
+    existing = set(line.strip() for line in lines if line.strip().startswith(('import', '#import')))
+    to_add = [imp for imp in required if imp not in existing]
+    if not to_add:
+        print("      Imports already present.")
+        return lines, False
+    insert_idx = 0
+    for i, line in enumerate(lines[:50]):
+        if line.strip().startswith(('import', '#import')):
+            insert_idx = i + 1
+    new_lines = lines[:insert_idx] + [imp + "\n" for imp in to_add] + lines[insert_idx:]
+    print(f"      Added imports: {', '.join(to_add)}")
+    return new_lines, True
+
 def add_or_update_method(lines, language, config):
     method_name = config['name']
     swift_patterns = [re.compile(p) for p in config.get('swift_patterns', [])]
@@ -382,56 +470,18 @@ def add_or_update_method(lines, language, config):
                 break
         if class_end_brace_idx != -1:
             indent_for_new_method = get_indentation(lines[class_def_line_idx]) + DEFAULT_INDENT
-            # Custom stubs for special methods
-            if method_name == 'openURL':
-                stub = [
-                    "override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {",
-                    f"{indent_for_new_method}let handleBySmartech:Bool = Smartech.sharedInstance().application(app, open: url, options: options);",
-                    f"{indent_for_new_method}if(!handleBySmartech) {{",
-                    f"{indent_for_new_method}{DEFAULT_INDENT}// handle the url by the app",
-                    f"{indent_for_new_method}}}",
-                    f"{indent_for_new_method}return true;",
-                    "}"
-                ]
-            elif method_name == 'willPresent':
-                stub = [
-                    "override func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {",
-                    f"{indent_for_new_method}SmartPush.sharedInstance().willPresentForegroundNotification(notification)",
-                    f"{indent_for_new_method}completionHandler([.alert, .badge, .sound])",
-                    "}"
-                ]
-            elif method_name == 'didReceive':
-                stub = [
-                    "override func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {",
-                    f"{indent_for_new_method}SmartPush.sharedInstance().didReceive(response)",
-                    f"{indent_for_new_method}completionHandler()",
-                    "}"
-                ]
-            elif method_name == 'didRegisterForRemoteNotificationsWithDeviceToken':
-                stub = [
-                    "override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {",
-                    f"{indent_for_new_method}SmartPush.sharedInstance().didRegisterForRemoteNotifications(withDeviceToken: deviceToken)",
-                    "}"
-                ]
-            elif method_name == 'didFailToRegisterForRemoteNotificationsWithError':
-                stub = [
-                    "override func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {",
-                    f"{indent_for_new_method}SmartPush.sharedInstance().didFailToRegisterForRemoteNotificationsWithError(error)",
-                    f"{indent_for_new_method}print(\"Failed to register for remote notifications: \\(error.localizedDescription)\")",
-                    "}"
-                ]
-            else:
-                stub = swift_stub if language == 'swift' else objc_stub
-                if not stub:
-                    print(f"      Error: No method stub defined for {method_name} in {language}. Cannot add method.")
-                    return lines, False
+            # Prefer provided stubs which already respect override vs non-override
+            stub = swift_stub if language == 'swift' else objc_stub
+            if not stub:
+                print(f"      Error: No method stub defined for {method_name} in {language}. Cannot add method.")
+                return lines, False
             stub_to_insert = ["\n"] + [f"{indent_for_new_method}{line}\n" if i != 0 and i != len(stub)-1 else f"{line}\n" for i, line in enumerate(stub)]
             lines = lines[:class_end_brace_idx] + stub_to_insert + lines[class_end_brace_idx:]
             print(f"      Successfully added method '{method_name}'.")
             return lines, True
     return lines, False
 
-def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, use_override=False):
+def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, use_override=False, is_native_ios=False, app_type=1, config_in_app_delegate=False, config_values=None):
     print(f"\n--- Modifying AppDelegate: {app_delegate_file_path} ({language}) ---")
     print("🚨 IMPORTANT: Review changes carefully after the script finishes! 🚨")
     backup_ad_path = app_delegate_file_path + '.backup'
@@ -450,6 +500,21 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
     try:
         with open(app_delegate_file_path, 'r', encoding='utf-8') as file:
             lines = file.readlines()
+
+        # If native iOS (use_override is False), strip 'override' from ANY Swift method signature
+        if not use_override and language == 'swift':
+            lines = [re.sub(r"^(\s*)override\s+func(\s+)", r"\\1func\\2", l) for l in lines]
+        # Ensure required imports
+        lines, _ = ensure_imports(lines, language, hansel_enabled=add_hansel_code_flag, is_react_native=(app_type == 3 and language == 'objc'))
+
+        # Ensure protocol conformances: SmartechDelegate, UNUserNotificationCenterDelegate (swift), and optional Hansel
+        required_protocols = ["SmartechDelegate"]
+        if language == 'swift':
+            required_protocols.append("UNUserNotificationCenterDelegate")
+        if add_hansel_code_flag:
+            required_protocols.extend(["HanselDeepLinkListener", "HanselEventsListener"])
+        lines, _ = add_protocols_if_needed(lines, language, required_protocols)
+
         methods_to_process = [
         {
             'name': 'didFinishLaunchingWithOptions',
@@ -463,17 +528,19 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
             ],
             'code': {
                 'swift': [
+                    "HanselTracker.registerListener(self)" if add_hansel_code_flag else None,
+                    "Hansel.registerHanselDeeplinkListener(listener: self)" if add_hansel_code_flag else None,
                     "Hansel.enableDebugLogs() // TODO: Disable debug logs for production" if add_hansel_code_flag else None,
-                    "Smartech.sharedInstance().trackAppInstallUpdateBySmartech()",
                     "Smartech.sharedInstance().setDebugLevel(.verbose) // TODO: Set appropriate debug level",
+                    "Smartech.sharedInstance().trackAppInstallUpdateBySmartech()",
                     "SmartPush.sharedInstance().registerForPushNotificationWithDefaultAuthorizationOptions()",
                     "UNUserNotificationCenter.current().delegate = self",
                     "Smartech.sharedInstance().initSDK(with: self, withLaunchOptions: launchOptions)",
                 ],
                 'objc': [
                     "[Hansel enableDebugLogs];" if add_hansel_code_flag else None,
-                    "[[Smartech sharedInstance] trackAppInstallUpdateBySmartech];",
                     "[[Smartech sharedInstance] setDebugLevel:SmartechLogLevelVerbose];",
+                    "[[Smartech sharedInstance] trackAppInstallUpdateBySmartech];",
                     "[[SmartPush sharedInstance] registerForPushNotificationWithDefaultAuthorizationOptions];",
                     "[UNUserNotificationCenter currentNotificationCenter].delegate = self;",
                     "[[Smartech sharedInstance] initSDKWithApplication:self didFinishLaunchingWithOptions:launchOptions];",
@@ -581,23 +648,153 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
         # Add or update methods
         for method_config in methods_to_process:
             lines, modified = add_or_update_method(lines, language, method_config)
-        # Check for handleDeeplinkAction
-        deeplink_pattern = re.compile(r"func\s+handleDeeplinkAction\s*\(")
-        if not any(deeplink_pattern.search(line) for line in lines):
-            # Insert before last closing brace of class
+
+        # If requested, inject SmartechConfig in Swift before initSDK
+        if config_in_app_delegate and language == 'swift' and config_values:
+            sig_idx, open_brace_idx, end_idx = find_method_bounds(
+                lines,
+                language,
+                [re.compile(r"func\s+application\s*\(.*didFinishLaunchingWithOptions")]
+            )
+            if sig_idx != -1 and open_brace_idx != -1 and end_idx != -1:
+                body_indent = None
+                init_line_idx = -1
+                for idx in range(open_brace_idx+1, end_idx):
+                    if body_indent is None and lines[idx].strip():
+                        body_indent = get_indentation(lines[idx])
+                    if "Smartech.sharedInstance().initSDK" in lines[idx]:
+                        init_line_idx = idx
+                        break
+                if body_indent is None:
+                    body_indent = get_indentation(lines[sig_idx]) + DEFAULT_INDENT
+                already = any("SmartechConfig.sharedInstance()" in l for l in lines[open_brace_idx+1:end_idx])
+                if init_line_idx != -1 and not already:
+                    cfg_lines = [
+                        f"{body_indent}let config = SmartechConfig.sharedInstance()",
+                        f"{body_indent}config.appGroup = \"{(config_values.get('SmartechAppGroup') or '')}\"",
+                        f"{body_indent}config.smartechAppId = \"{(config_values.get('SmartechAppId') or '')}\"",
+                    ]
+                    if add_hansel_code_flag:
+                        cfg_lines.append(f"{body_indent}config.hanselAppId = \"{(config_values.get('HanselAppId') or '')}\"")
+                        cfg_lines.append(f"{body_indent}config.hanselAppKey = \"{(config_values.get('HanselAppKey') or '')}\"")
+                    cfg_lines.append(f"{body_indent}Smartech.sharedInstance().setSmartechConfig(config)")
+                    lines[init_line_idx:init_line_idx] = [l + "\n" for l in cfg_lines]
+        # If requested, inject SmartechConfig in Objective-C before initSDK
+        if config_in_app_delegate and language == 'objc' and config_values:
+            sig_idx, open_brace_idx, end_idx = find_method_bounds(
+                lines,
+                language,
+                [re.compile(r"-\s*\(BOOL\)\s*application:\s*\(UIApplication\s*\*\)\s*\w+\s*didFinishLaunchingWithOptions:\s*\(NSDictionary\s*\*\)\s*\w+")]
+            )
+            if sig_idx != -1 and open_brace_idx != -1 and end_idx != -1:
+                body_indent = None
+                init_line_idx = -1
+                for idx in range(open_brace_idx+1, end_idx):
+                    if body_indent is None and lines[idx].strip():
+                        body_indent = get_indentation(lines[idx])
+                    if "initSDKWithApplication" in lines[idx]:
+                        init_line_idx = idx
+                        break
+                if body_indent is None:
+                    body_indent = get_indentation(lines[sig_idx]) + DEFAULT_INDENT
+                already = any("SmartechConfig *config" in l for l in lines[open_brace_idx+1:end_idx])
+                if init_line_idx != -1 and not already:
+                    objc_cfg_lines = [
+                        f"{body_indent}SmartechConfig *config = [SmartechConfig sharedInstance];",
+                        f"{body_indent}config.smartechAppId = @\"{(config_values.get('SmartechAppId') or '')}\";",
+                    ]
+                    if add_hansel_code_flag:
+                        objc_cfg_lines.append(f"{body_indent}config.hanselAppId = @\"{(config_values.get('HanselAppId') or '')}\";")
+                        objc_cfg_lines.append(f"{body_indent}config.hanselAppKey = @\"{(config_values.get('HanselAppKey') or '')}\";")
+                    objc_cfg_lines.append(f"{body_indent}[[Smartech sharedInstance] setSmartechConfig:config];")
+                    lines[init_line_idx:init_line_idx] = [l + "\n" for l in objc_cfg_lines]
+        # Insert handleDeeplinkAction based on app type and language
+        if language == 'swift':
+            has_swift_deeplink = any(re.search(r"func\s+handleDeeplinkAction\s*\(", l) for l in lines)
+            if not has_swift_deeplink:
+                class_end = len(lines) - 1
+                for i in range(len(lines) - 1, -1, -1):
+                    if lines[i].strip() == "}":
+                        class_end = i
+                        break
+                swift_stub = []
+                if is_native_ios:
+                    swift_stub = [
+                        "// MARK: - Smartech Delegate Methods",
+                        "func handleDeeplinkAction(withURLString deeplinkURLString: String, andNotificationPayload notificationPayload: [AnyHashable : Any]?) {",
+                        f"{DEFAULT_INDENT}print(\"SMTLogger: handleDeeplinkActionWithURLString\")",
+                        f"{DEFAULT_INDENT}print(\"SMTLogger: Deeplink URL: \\(" + "deeplinkURLString," + "\\)\")",
+                        f"{DEFAULT_INDENT}print(\"SMTLogger: NotificationPayload: \\(" + "String(describing: notificationPayload)," + "\\)\")",
+                        "}",
+                    ]
+                elif use_override:
+                    swift_stub = [
+                        "// MARK: - Smartech Delegate Methods",
+                        "func handleDeeplinkAction(withURLString deeplinkURLString: String, andNotificationPayload notificationPayload: [AnyHashable : Any]?) {",
+                        f"{DEFAULT_INDENT}print(\"SMTLogger: handleDeeplinkActionWithURLString passing notification data to base flutter plugin\")",
+                        f"{DEFAULT_INDENT}SmartechBasePlugin.handleDeeplinkAction(deeplinkURLString, andCustomPayload:notificationPayload)",
+                        "}",
+                    ]
+                if swift_stub:
+                    lines = lines[:class_end] + [f"{DEFAULT_INDENT}{l}\n" for l in swift_stub] + lines[class_end:]
+                    print("Added Swift handleDeeplinkAction method.")
+        elif language == 'objc':
+            has_objc_deeplink = any(re.search(r"handleDeeplinkActionWithURLString\s*:\s*\(NSString\s*\*\)\s*deeplinkURLString", l) for l in lines)
+            if not has_objc_deeplink:
+                insert_idx = len(lines)
+                for i in range(len(lines) - 1, -1, -1):
+                    if re.match(r"^\s*@end\s*$", lines[i]):
+                        insert_idx = i
+                        break
+                objc_stub = []
+                if is_native_ios:
+                    objc_stub = [
+                        "#pragma mark - Smartech Delegate Method",
+                        "- (void)handleDeeplinkActionWithURLString:(NSString *)deeplinkURLString andNotificationPayload:(NSDictionary *_Nullable)notificationPayload {",
+                        "    NSLog(@\"SMTLogger: handleDeeplinkActionWithURLString\");",
+                        "    NSLog(@\"SMTLogger: Deeplink URL: %@\", deeplinkURLString);",
+                        "    NSLog(@\"SMTLogger: Notification Payload: %@\", notification_payload);",
+                        "}",
+                    ]
+                elif app_type == 3:
+                    objc_stub = [
+                        "#pragma mark Smartech Deeplink Delegate",
+                        "- (void)handleDeeplinkActionWithURLString:(NSString *)deeplinkURLString andNotificationPayload:(NSDictionary *)notificationPayload {",
+                        "  NSMutableDictionary *smtData = [[NSMutableDictionary alloc] initWithDictionary:notificationPayload];",
+                        "  smtData[kDeeplinkIdentifier] = smtData[kSMTDeeplinkIdentifier];",
+                        "  smtData[kCustomPayloadIdentifier] = smtData[kSMTCustomPayloadIdentifier];",
+                        "  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{",
+                        "    NSLog(@\"SMTLOGGER DEEPLINK: %@\",deeplinkURLString);",
+                        "    [[NSNotificationCenter defaultCenter] postNotificationName:kSMTDeeplinkNotificationIdentifier object:nil userInfo:smtData];",
+                        "  });",
+                        "}",
+                    ]
+                if objc_stub:
+                    lines = lines[:insert_idx] + [l + "\n" for l in objc_stub] + lines[insert_idx:]
+                    print("Added ObjC handleDeeplinkAction method.")
+        # Native iOS only: add Swift helper methods for Hansel events and deeplink listener
+        if language == 'swift':
             class_end = len(lines) - 1
             for i in range(len(lines) - 1, -1, -1):
                 if lines[i].strip() == "}":
                     class_end = i
                     break
-            stub = [
-                "func handleDeeplinkAction(withURLString deeplinkURLString: String, andNotificationPayload notificationPayload: [AnyHashable : Any]?) {",
-                "    NSLog(\"SMTL deeplink Native---> \\(deeplinkURLString)\")",
-                "    SmartechBasePlugin.handleDeeplinkAction(deeplinkURLString, andCustomPayload: notificationPayload)",
-                "}"
-            ]
-            lines = lines[:class_end] + [f"{DEFAULT_INDENT}{l}\n" for l in stub] + lines[class_end:]
-            print("Added handleDeeplinkAction method.")
+            if not any(re.search(r"func\s+fireHanselEventwithName\s*\(", l) for l in lines):
+                helper_stub = [
+                    "// MARK: PX - EventsListener",
+                    "func fireHanselEventwithName(eventName: String, properties: [AnyHashable : Any]?) {",
+                    f"{DEFAULT_INDENT}// hansel_nudge_show_event, hansel_nudge_event, hansel_branch_tracker",
+                    f"{DEFAULT_INDENT}Smartech.sharedInstance().trackEvent(eventName, andPayload: properties)",
+                    "}",
+                    "",
+                    "// MARK: PX - Deeplink Listener",
+                    "func onLaunchURL(URLString: String!) {",
+                    f"{DEFAULT_INDENT}NSLog(\"URL Nudge: \\(" + "URLString ," + "\\)\")",
+                    f"{DEFAULT_INDENT}//",
+                    "}",
+                ]
+                lines = lines[:class_end] + [f"{DEFAULT_INDENT}{l}\n" for l in helper_stub] + lines[class_end:]
+
         # Write back
         with open(app_delegate_file_path, 'w', encoding='utf-8') as file:
             file.writelines(lines)
@@ -729,6 +926,8 @@ class NotificationViewController: SMTCustomNotificationViewController {
         f.write('{"info" : {"author" : "xcode","version" : 1}}')
     with open(os.path.join(nce_assets_path, "MyAppIcon.imageset", "Contents.json"), "w") as f:
         f.write('{"images" : [], "info" : {"author" : "xcode","version" : 1}}')
+    print("ℹ️ Created Media.xcassets/MyAppIcon.imageset with empty images. Open Xcode and drop your app icon(s) into this image set.")
+    print("🔔 Reminder: After adding icons to 'MyAppIcon.imageset', rebuild so SmartechNCE can display your custom notification image.")
 
     # --- SmartechNSE (Notification Service Extension) ---
     nse_path = os.path.join(ios_project_path, "SmartechNSE")
@@ -774,6 +973,184 @@ class NotificationService: UNNotificationServiceExtension {
     print("✅ SmartechNCE and SmartechNSE extension files created successfully.")
 
 
+def check_ruby_gems():
+    print("\n--- Checking Ruby environment and required gems ---")
+    
+    # First check if Ruby is available
+    try:
+        ruby_version = subprocess.run(["ruby", "--version"], 
+                                    capture_output=True, 
+                                    text=True, 
+                                    check=True)
+        print(f"✅ Ruby detected: {ruby_version.stdout.strip()}")
+    except subprocess.CalledProcessError:
+        print("❌ Ruby is not installed or not in PATH")
+        sys.exit(1)
+
+    # Check for rbenv and initialize if present
+    try:
+        subprocess.run(["rbenv", "--version"],
+                      capture_output=True,
+                      check=True)
+        print("ℹ️ rbenv detected, initializing environment...")
+
+        # Set up rbenv environment
+        env_commands = [
+            'export PATH="$HOME/.rbenv/bin:$PATH"',
+            'eval "$(rbenv init - zsh)"',
+            'rbenv shell 3.2.2'
+        ]
+
+        for cmd in env_commands:
+            subprocess.run(cmd, shell=True, check=True)
+
+        print("✅ rbenv environment initialized")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print("ℹ️ rbenv not detected, using system Ruby")
+    
+    # Check if plist gem is installed, install if missing
+    print("\nChecking for required gems...")
+    try:
+        subprocess.run(
+            ['ruby', '-e', "require 'plist'; puts 'plist ok'"],
+            capture_output=True,
+            check=True
+        )
+        print("✅ plist gem is installed")
+    except subprocess.CalledProcessError:
+        print("ℹ️ Installing plist gem...")
+        try:
+            subprocess.run(
+                ['gem', 'install', 'plist', '--no-document'],
+                check=True
+            )
+            print("✅ plist gem installed successfully")
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Failed to install plist gem: {e}")
+            sys.exit(1)
+
+    # Check for xcodeproj gem
+    try:
+        subprocess.run(
+            ['ruby', '-e', "require 'xcodeproj'; puts 'xcodeproj ok'"],
+            capture_output=True,
+            check=True
+        )
+        print("✅ xcodeproj gem is installed")
+    except subprocess.CalledProcessError:
+        print("ℹ️ Installing xcodeproj gem...")
+        try:
+            subprocess.run(
+                ['gem', 'install', 'xcodeproj', '--no-document'],
+                check=True
+            )
+            print("✅ xcodeproj gem installed successfully")
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Failed to install xcodeproj gem: {e}")
+            sys.exit(1)
+
+def ask_integration_mode():
+    print("\nChoose integration mode:")
+    print("1. Run scripted auto-integration (recommended)")
+    print("2. I will integrate manually using official docs")
+    while True:
+        choice = input("Enter 1 or 2: ").strip()
+        if choice in ("1", "2"):
+            return int(choice)
+        print("Invalid input. Please enter 1 or 2.")
+
+def show_manual_links_and_exit(app_type: int):
+    links = {
+        1: "https://developer.netcorecloud.com/docs/ios-new-sdk-integration",
+        2: "https://developer.netcorecloud.com/docs/flutter-new-sdk-integration#for-ios-sdk-setup",
+        3: "https://developer.netcorecloud.com/docs/react-native-modular-sdk-integration-user-guide#install-ios-sdk",
+        4: "https://developer.netcorecloud.com/docs/cordova#install-ios-sdk",
+        5: "https://developer.netcorecloud.com/docs/ionic-sdk#install-ios-sdk",
+    }
+    print("\nYou chose manual integration. Please follow the official guide:")
+    print(f"  → {links.get(app_type)}")
+    sys.exit(0)
+
+def ensure_flutter_plugins_and_pub_get(project_root: str, hansel_enabled: bool):
+    pubspec_path = os.path.join(project_root, "pubspec.yaml")
+    if not os.path.exists(pubspec_path):
+        print(f"❌ pubspec.yaml not found at project root: {pubspec_path}. Aborting.")
+        sys.exit(1)
+    try:
+        with open(pubspec_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except Exception as e:
+        print(f"❌ Failed to read pubspec.yaml: {e}")
+        sys.exit(1)
+
+    lines = content.splitlines()
+    if not any(l.strip().startswith('dependencies:') for l in lines):
+        lines.append('')
+        lines.append('dependencies:')
+
+    dep_index = next((i for i, l in enumerate(lines) if l.strip().startswith('dependencies:')), None)
+    indent = "  "
+    insert_at = dep_index + 1 if dep_index is not None else len(lines)
+
+    required = [
+        f"{indent}smartech_base:",
+        f"{indent}smartech_push:",
+    ]
+    if hansel_enabled:
+        required.append(f"{indent}smartech_nudges:")
+
+    for dep in required:
+        if not any(line.strip().startswith(dep.strip()) for line in lines):
+            lines.insert(insert_at, dep)
+            insert_at += 1
+
+    new_content = "\n".join(lines) + ("\n" if not lines or not lines[-1].endswith('\n') else "")
+    if new_content != content:
+        try:
+            with open(pubspec_path, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            print("✅ Updated pubspec.yaml with required Smartech plugins.")
+            git_commit("chore: add Smartech Flutter plugins to pubspec.yaml", [pubspec_path])
+        except Exception as e:
+            print(f"❌ Failed to update pubspec.yaml: {e}")
+            sys.exit(1)
+    else:
+        print("ℹ️ pubspec.yaml already contains required Smartech plugins.")
+
+    try:
+        result = subprocess.run(["flutter", "pub", "get"], cwd=project_root)
+        if result.returncode != 0:
+            print("❌ 'flutter pub get' failed. Please resolve and retry.")
+            sys.exit(1)
+        print("✅ Completed 'flutter pub get'.")
+    except FileNotFoundError:
+        print("❌ Flutter not found. Please install Flutter and ensure it is on PATH.")
+        sys.exit(1)
+
+def run_npm_installs_for_app_type(project_root: str, app_type: int, hansel_enabled: bool):
+    commands = []
+    if app_type == 3:
+        commands.append(["npm", "install", "smartech-base-react-native"])
+        commands.append(["npm", "install", "smartech-push-react-native"])
+        if hansel_enabled:
+            commands.append(["npm", "install", "--save", "smartech-reactnative-nudges"])
+    elif app_type in (4, 5):
+        commands.append(["npm", "install", "smartech-base-cordova", "--save"])
+        commands.append(["npm", "install", "smartech-push-cordova", "--save"])
+        # Hansel not supported; no additional installs
+
+    for cmd in commands:
+        print(f"Running: {' '.join(cmd)}")
+        try:
+            result = subprocess.run(cmd, cwd=project_root)
+            if result.returncode != 0:
+                print(f"❌ Command failed: {' '.join(cmd)}")
+                sys.exit(1)
+        except FileNotFoundError:
+            print("❌ npm not found. Please install Node.js and npm, then retry.")
+            sys.exit(1)
+    if commands:
+        print("✅ JavaScript dependencies installed.")
 def write_ensure_capabilities_ruby_script(script_path):
     ruby_code = """
 require 'xcodeproj'
@@ -825,6 +1202,21 @@ def ensure_capabilities(xcodeproj_path, app_group_id)
   # Push Notifications: No entitlements key needed, just a reminder
   puts "✅ Ensure Push Notifications capability is enabled in Xcode (no entitlements key needed)."
 
+  # Enable System Capabilities for Push Notifications and Background Modes
+  begin
+    root_obj = project.root_object
+    target_attrs = root_obj.attributes
+    target_attrs['TargetAttributes'] ||= {}
+    target_uuid = main_target.uuid
+    target_attrs['TargetAttributes'][target_uuid] ||= {}
+    target_attrs['TargetAttributes'][target_uuid]['SystemCapabilities'] ||= {}
+    target_attrs['TargetAttributes'][target_uuid]['SystemCapabilities']['com.apple.Push'] = { 'enabled' => 1 }
+    target_attrs['TargetAttributes'][target_uuid]['SystemCapabilities']['com.apple.BackgroundModes'] = { 'enabled' => 1 }
+    puts "✅ Enabled SystemCapabilities: Push Notifications and Background Modes on main target."
+  rescue => e
+    puts "⚠️  Could not update SystemCapabilities: #{e}"
+  end
+
   project.save
 end
 
@@ -853,6 +1245,20 @@ def write_ruby_add_target_script(script_path):
     ruby_code = r"""
 require 'xcodeproj'
 require 'pathname'
+
+# Ensure system frameworks are linked to a target
+def add_system_framework(project, target, framework_name)
+  framework_path = "System/Library/Frameworks/#{framework_name}"
+  group = project.frameworks_group
+  ref = group.files.find { |f| f.path == framework_path }
+  ref ||= group.new_file(framework_path)
+  unless target.frameworks_build_phase.files_references.include?(ref)
+    target.frameworks_build_phase.add_file_reference(ref, true)
+    puts "✅ Linked #{framework_name} to target #{target.name}"
+  else
+    puts "ℹ️  #{framework_name} already linked to target #{target.name}"
+  end
+end
 
 # This function embeds the created extension within the main application target.
 # This is crucial for the app to find and use the extension.
@@ -963,6 +1369,16 @@ def add_extension_target(project_path, target_name, info_plist, entitlements, so
   target.add_resources(resource_refs)
 
   embed_extension_in_main_target(project, target)
+
+  # Link required Apple frameworks for notification extensions
+  begin
+    if target_name == 'SmartechNCE'
+      add_system_framework(project, target, 'UserNotifications.framework')
+      add_system_framework(project, target, 'UserNotificationsUI.framework')
+    end
+  rescue => e
+    puts "⚠️  Could not add system frameworks: #{e}"
+  end
   
   project.save
   puts "✅ Successfully configured target '#{target_name}' in #{File.basename(project_path)}."
@@ -1083,31 +1499,139 @@ def ensure_podfile_exists_and_install(ios_project_path):
         sys.exit(1)
     print("✅ Pods installed.")
         
+def git_commit(commit_message, paths):
+    """Create a git commit with the specified paths if inside a repo and there are staged changes.
+
+    - Silently no-ops if not a git repo or git is unavailable
+    - Adds only existing paths
+    - Skips commit if there is nothing to commit
+    """
+    try:
+        # Ensure git exists and we are in a repo
+        repo_root = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    except Exception:
+        return
+
+    # Stage files
+    add_list = []
+    for p in paths or []:
+        if not p:
+            continue
+        if os.path.exists(p):
+            try:
+                rel = os.path.relpath(p, repo_root)
+            except Exception:
+                rel = p
+            add_list.append(rel)
+    if not add_list:
+        return
+    try:
+        subprocess.run(["git", "add"] + add_list, cwd=repo_root, check=True)
+        # Check if anything is staged
+        diff_rc = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=repo_root).returncode
+        if diff_rc == 0:
+            return
+        subprocess.run(["git", "commit", "-m", commit_message], cwd=repo_root, check=True)
+        print(f"📝 Git commit created: {commit_message}")
+    except Exception:
+        # Non-fatal; continue script
+        pass
+
+def ensure_ruby_gem_installed(gem_name):
+    """Ensure a Ruby gem is available to the same Ruby used to run scripts.
+
+    Tries `require gem_name` inside Ruby. If it fails, installs via `gem install` using
+    the same Ruby environment (rbenv/system) visible to this process, then verifies again.
+    Returns True on success, False on failure.
+    """
+    try:
+        subprocess.run(
+            [
+                'ruby',
+                '-e',
+                f"begin; require '{gem_name}'; puts 'ok'; rescue LoadError; exit 42; end",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return True
+    except subprocess.CalledProcessError as e:
+        if e.returncode != 42:
+            # Some other Ruby error; do not attempt install blindly
+            return False
+        print(f"ℹ️ Installing missing Ruby gem '{gem_name}'...")
+        install = subprocess.run(
+            [
+                'ruby',
+                '-e',
+                (
+                    "begin; "
+                    f"system(%q{{gem install {gem_name} --no-document}}) or exit 43; "
+                    f"require '{gem_name}'; puts 'installed'; "
+                    "rescue => ex; STDERR.puts ex; exit 43; end"
+                ),
+            ],
+            text=True,
+        )
+        if install.returncode != 0:
+            print(f"❌ Failed to install Ruby gem '{gem_name}'.")
+            return False
+        print(f"✅ Installed Ruby gem '{gem_name}'.")
+        return True
+
+def ensure_required_ruby_gems(gem_names):
+    all_ok = True
+    for gem in gem_names:
+        if not ensure_ruby_gem_installed(gem):
+            all_ok = False
+    return all_ok
+
 def get_url_scheme_from_user():
     while True:
-        url_scheme = input("Enter a custom URL scheme for your app (e.g., myapp): ").strip()
+        url_scheme = input("Enter a custom URL scheme for your app (e.g., smartechapp): ").strip()
         if url_scheme:
             return url_scheme
         print("  URL scheme cannot be empty.")
 
 def main():
     print("Starting Smartech/Hansel project configuration script...")
-
+    
+    # Add this line near the start of main()
+    check_ruby_gems()
+    
     # Ask for app type and set use_override flag
     app_type = ask_app_type()
     use_override = (app_type == 2)  # True for Flutter, False otherwise
+    # Ask integration mode
+    mode = ask_integration_mode()
+    if mode == 2:
+        show_manual_links_and_exit(app_type)
 
         # Set ios_project_path based on app type
     if app_type == 1:  # Native iOS
         ios_project_path = os.getcwd()
+        search_root = "."
+        current_exclusions = EXCLUDE_DIRS + ['/ios/']
     else:  # Flutter, React Native, Cordova, Ionic
         ios_project_path = os.path.join(os.getcwd(), "ios")
+        search_root = "ios"
+        current_exclusions = EXCLUDE_DIRS
+    # Pre-install steps before CocoaPods based on app type
+    if app_type == 2:
+        # Flutter: ensure pubspec.yaml and required plugins, run pub get BEFORE pods
+        ensure_flutter_plugins_and_pub_get(os.getcwd(), hansel_enabled=False)
+    elif app_type in (3, 4, 5):
+        # React Native / Cordova / Ionic: install JavaScript deps BEFORE pods
+        run_npm_installs_for_app_type(os.getcwd(), app_type, hansel_enabled=False)
 
-    ios_project_path = os.path.join(os.getcwd(), "ios")
-    ensure_podfile_exists_and_install(ios_project_path)
-
-    plist_path = find_info_plist(EXCLUDE_DIRS)
-    app_delegate_details_dict = find_app_delegate_details(EXCLUDE_DIRS)
+    plist_path = find_info_plist(current_exclusions)
+    app_delegate_details_dict = find_app_delegate_details(current_exclusions, search_root)
     app_delegate_name, app_delegate_file_path, app_delegate_language, app_entry_type = None, None, None, "Unknown"
     if app_delegate_details_dict:
         if 'error' in app_delegate_details_dict:
@@ -1135,12 +1659,21 @@ def main():
          print("\nWarning: Hansel SDK opted-in, but keys were not provided. Hansel setup will be skipped.")
          user_opted_for_hansel = False
 
+    # With Hansel choice finalized, ensure per-platform package prerequisites
+    if app_type == 2:
+        ensure_flutter_plugins_and_pub_get(os.getcwd(), hansel_enabled=user_opted_for_hansel)
+    elif app_type in (3, 4, 5):
+        run_npm_installs_for_app_type(os.getcwd(), app_type, hansel_enabled=user_opted_for_hansel)
+
+    # Ask where to place config (plist vs app delegate)
+    config_location = ask_config_location()
+
     # --- Ask for URL scheme after Hansel keys ---
     url_scheme = get_url_scheme_from_user()
 
     # --- Ensure main target capabilities using Ruby script ---
     xcodeproj_name = find_xcodeproj_name(ios_project_path)
-    ensure_capabilities_rb_path = os.path.join("ios", "ensure_capabilities.rb")
+    ensure_capabilities_rb_path = os.path.join(ios_project_path, "ensure_capabilities.rb")
     try:
         if xcodeproj_name:
             xcodeproj_path = os.path.join(ios_project_path, xcodeproj_name)
@@ -1171,20 +1704,50 @@ def main():
         print(f"Backing up Info.plist to {backup_plist_path}")
         os.makedirs(os.path.dirname(backup_plist_path), exist_ok=True)
         with open(plist_path, 'rb') as f_read, open(backup_plist_path, 'wb') as f_write:
-            f_write.write(f_read.read())
+                       f_write.write(f_read.read())
         with open(plist_path, 'rb') as fp:
             try: plist_data = plistlib.load(fp)
             except Exception as e: print(f"Error: Failed to parse Info.plist. Error: {e}"); raise
         keys_added_or_updated_plist = []
-        if plist_data.get('SmartechKeys') != smartech_user_data:
-            plist_data['SmartechKeys'] = smartech_user_data
-            keys_added_or_updated_plist.append("SmartechKeys"); plist_modified = True
-        if user_opted_for_hansel and hansel_user_data and plist_data.get('HanselKeys') != hansel_user_data:
-            plist_data['HanselKeys'] = hansel_user_data
-            keys_added_or_updated_plist.append("HanselKeys"); plist_modified = True
-        elif not user_opted_for_hansel and 'HanselKeys' in plist_data:
-            del plist_data['HanselKeys']
-            keys_added_or_updated_plist.append("HanselKeys (Removed)"); plist_modified = True
+        if config_location == 'plist':
+            if plist_data.get('SmartechKeys') != smartech_user_data:
+                plist_data['SmartechKeys'] = smartech_user_data
+                keys_added_or_updated_plist.append("SmartechKeys"); plist_modified = True
+            if user_opted_for_hansel and hansel_user_data and plist_data.get('HanselKeys') != hansel_user_data:
+                plist_data['HanselKeys'] = hansel_user_data
+                keys_added_or_updated_plist.append("HanselKeys"); plist_modified = True
+            elif not user_opted_for_hansel and 'HanselKeys' in plist_data:
+                del plist_data['HanselKeys']
+                keys_added_or_updated_plist.append("HanselKeys (Removed)"); plist_modified = True
+        else:
+            # In AppDelegate config mode: keep only booleans in SmartechKeys; drop IDs; remove HanselKeys
+            smt_keys = plist_data.get('SmartechKeys', {}) or {}
+            bool_changed = False
+            # Preserve/ensure boolean flags
+            if 'SmartechAutoFetchLocation' in smartech_user_data:
+                if smt_keys.get('SmartechAutoFetchLocation') != smartech_user_data['SmartechAutoFetchLocation']:
+                    smt_keys['SmartechAutoFetchLocation'] = smartech_user_data['SmartechAutoFetchLocation']
+                    bool_changed = True
+            if 'SmartechUseAdvId' in smartech_user_data:
+                if smt_keys.get('SmartechUseAdvId') != smartech_user_data['SmartechUseAdvId']:
+                    smt_keys['SmartechUseAdvId'] = smartech_user_data['SmartechUseAdvId']
+                    bool_changed = True
+            # Remove IDs if present
+            if 'SmartechAppGroup' in smt_keys:
+                del smt_keys['SmartechAppGroup']
+                bool_changed = True
+            if 'SmartechAppId' in smt_keys:
+                del smt_keys['SmartechAppId']
+                bool_changed = True
+            # Write back the pruned keys if needed
+            if bool_changed or 'SmartechKeys' not in plist_data:
+                plist_data['SmartechKeys'] = smt_keys
+                keys_added_or_updated_plist.append("SmartechKeys (booleans only)")
+                plist_modified = True
+            # Remove HanselKeys entirely
+            if 'HanselKeys' in plist_data:
+                del plist_data['HanselKeys']
+                keys_added_or_updated_plist.append("HanselKeys (Removed)"); plist_modified = True
 
         # --- Add or update URL scheme ---
         if url_scheme:
@@ -1203,10 +1766,23 @@ def main():
                 keys_added_or_updated_plist.append("CFBundleURLTypes (added/updated)")
                 plist_modified = True
 
+        # If auto fetch location is enabled, ensure background mode 'location' is present
+        if smartech_user_data.get('SmartechAutoFetchLocation'):
+            bg_modes2 = plist_data.get('UIBackgroundModes', [])
+            if 'location' not in bg_modes2:
+                bg_modes2.append('location')
+                plist_data['UIBackgroundModes'] = bg_modes2
+                keys_added_or_updated_plist.append("UIBackgroundModes (added 'location')")
+                plist_modified = True
+
         if plist_modified:
             with open(plist_path, 'wb') as fp:
                 plistlib.dump(plist_data, fp, fmt=plistlib.FMT_XML if sys.version_info >= (3, 4) else None)
             print(f"Successfully updated Info.plist for: {', '.join(keys_added_or_updated_plist)}.")
+            git_commit(
+                "chore: update Info.plist with Smartech/Hansel config and URL scheme",
+                [plist_path]
+            )
         else:
             print("Info.plist already contains the necessary SDK key configurations or no changes were opted for.")
     except Exception as e:
@@ -1217,8 +1793,22 @@ def main():
         appdelegate_modified_flag = modify_app_delegate(
             app_delegate_file_path, app_delegate_language,
             user_opted_for_hansel and bool(hansel_user_data),
-            use_override=use_override
+            use_override=use_override,
+            is_native_ios=(app_type == 1),
+            app_type=app_type,
+            config_in_app_delegate=(config_location == 'app_delegate'),
+            config_values={
+                'SmartechAppGroup': smartech_user_data.get('SmartechAppGroup'),
+                'SmartechAppId': smartech_user_data.get('SmartechAppId'),
+                'HanselAppId': (hansel_user_data or {}).get('HanselAppId') if user_opted_for_hansel else None,
+                'HanselAppKey': (hansel_user_data or {}).get('HanselAppKey') if user_opted_for_hansel else None,
+            }
         )
+        if appdelegate_modified_flag:
+            git_commit(
+                "feat: integrate Smartech hooks in AppDelegate",
+                [app_delegate_file_path]
+            )
     elif app_delegate_language == 'swiftui_app':
         print("\n--- Manual Integration Required (SwiftUI App) ---")
         print("Detected a SwiftUI App struct. Automatic code insertion is not fully supported.")
@@ -1241,7 +1831,7 @@ def main():
          print(f"ℹ️ Automatic AppDelegate modification was skipped (Reason: {app_entry_type}). See instructions above.")
 
     # --- Detect Xcode project name automatically ---
-    ios_project_path = os.path.join(os.getcwd(), "ios")
+    # Reuse previously resolved ios_project_path without forcing 'ios' subdirectory
     xcodeproj_name = find_xcodeproj_name(ios_project_path)
     if xcodeproj_name:
         print(f"Detected Xcode project: {xcodeproj_name}")
@@ -1257,6 +1847,14 @@ def main():
         smartech_app_id=smartech_user_data["SmartechAppId"],
         ios_project_path=ios_project_path
     )
+    # Commit newly created extension files
+    git_commit(
+        "feat: add SmartechNCE and SmartechNSE extension scaffolding",
+        [
+            os.path.join(ios_project_path, "SmartechNCE"),
+            os.path.join(ios_project_path, "SmartechNSE"),
+        ]
+    )
 
     # --- Add SmartechNCE and SmartechNSE as Xcode targets using Ruby ---
     if xcodeproj_name:
@@ -1266,10 +1864,18 @@ def main():
             xcodeproj_path,
             "SmartechNCE"
         )
+        git_commit(
+            "chore: add SmartechNCE target to Xcode project",
+            [os.path.join(xcodeproj_path, "project.pbxproj")]
+        )
         # Call for Notification Service Extension
         add_target_with_ruby(
             xcodeproj_path,
             "SmartechNSE"
+        )
+        git_commit(
+            "chore: add SmartechNSE target to Xcode project",
+            [os.path.join(xcodeproj_path, "project.pbxproj")]
         )
     else:
         print("⚠️  Could not add extension targets because .xcodeproj was not found.")
@@ -1277,7 +1883,17 @@ def main():
     # --- Add SmartechNSE and SmartechNCE extension targets to Podfile ---
     podfile_path = os.path.join(ios_project_path, "Podfile")
     is_flutter = (app_type == 2)
-    ensure_smartech_extension_targets_in_podfile(podfile_path, is_flutter)
+    add_main_pods = (app_type == 1)
+    ensure_smartech_extension_targets_in_podfile(
+        podfile_path,
+        is_flutter,
+        add_main_target_pods=add_main_pods,
+        hansel_enabled=(user_opted_for_hansel and bool(hansel_user_data))
+    )
+    git_commit(
+        "chore: update Podfile for Smartech extensions and dependencies",
+        [podfile_path]
+    )
     
     # --- Final pod install after all changes ---
     try:
@@ -1291,21 +1907,64 @@ def main():
         print("❌ CocoaPods not found. Please install CocoaPods (gem install cocoapods) and re-run.")
         sys.exit(1)
     
+    # --- Ensure background modes capability (remote-notification) in Info.plist ---
+    try:
+        with open(plist_path, 'rb') as fp:
+            plist_data2 = plistlib.load(fp)
+        bg_modes = plist_data2.get('UIBackgroundModes', [])
+        if 'remote-notification' not in bg_modes:
+            bg_modes.append('remote-notification')
+            plist_data2['UIBackgroundModes'] = bg_modes
+            with open(plist_path, 'wb') as fp:
+                plistlib.dump(plist_data2, fp, fmt=plistlib.FMT_XML if sys.version_info >= (3, 4) else None)
+            print("✅ Added UIBackgroundModes: remote-notification to Info.plist")
+        else:
+            print("ℹ️ UIBackgroundModes already includes remote-notification")
+    except Exception as e:
+        print(f"⚠️ Could not ensure background modes in Info.plist: {e}")
+    
 def ensure_capabilities_with_ruby(xcodeproj_path, app_group_id):
     ruby_script = "ensure_capabilities.rb"
-    subprocess.run([
-        "ruby", ruby_script,
-        os.path.basename(xcodeproj_path),
-        app_group_id
-    ], check=True, cwd="ios")
+    workdir = os.path.dirname(xcodeproj_path)
+    try:
+        subprocess.run([
+            "ruby", ruby_script,
+            os.path.basename(xcodeproj_path),
+            app_group_id
+        ], check=True, cwd=workdir)
+    except subprocess.CalledProcessError:
+        print("⚠️ Ruby script failed. Attempting to install required gems ('plist', 'xcodeproj') and retry...")
+        if not ensure_required_ruby_gems(['plist', 'xcodeproj']):
+            print("❌ Could not ensure required Ruby gems are installed. Aborting.")
+            raise
+        # Retry once after installing gems
+        subprocess.run([
+            "ruby", ruby_script,
+            os.path.basename(xcodeproj_path),
+            app_group_id
+        ], check=True, cwd=workdir)
 
-def ensure_smartech_extension_targets_in_podfile(podfile_path, is_flutter):
+def ensure_smartech_extension_targets_in_podfile(podfile_path, is_flutter, add_main_target_pods=False, hansel_enabled=False):
     try:
         with open(podfile_path, 'r', encoding='utf-8') as f:
             content = f.read()
     except FileNotFoundError:
         print(f"⚠️  Podfile not found at {podfile_path}. Skipping Podfile extension target addition.")
         return
+
+    # Heuristic: detect if main app target uses use_frameworks!
+    def main_target_uses_frameworks(podfile_text: str) -> bool:
+        # Find first non-extension target block
+        target_blocks = re.finditer(r"target\s+'([^']+)'\s+do(.*?)end", podfile_text, flags=re.DOTALL)
+        for m in target_blocks:
+            target_name, block = m.group(1), m.group(2)
+            if target_name in ('SmartechNSE', 'SmartechNCE'):
+                continue
+            return 'use_frameworks!' in block
+        # Fallback: check top-level
+        return 'use_frameworks!' in podfile_text
+
+    main_uses_fw = main_target_uses_frameworks(content)
 
     # Remove any existing SmartechNSE/NCE extension targets
     content = re.sub(
@@ -1315,7 +1974,7 @@ def ensure_smartech_extension_targets_in_podfile(podfile_path, is_flutter):
         flags=re.DOTALL
     )
 
-    use_fw = "  use_frameworks!\n" if is_flutter else ""
+    use_fw = "  use_frameworks!\n" if (is_flutter or main_uses_fw) else ""
     extension_targets = (
         "\n#service extension target\n"
         "target 'SmartechNSE' do\n"
@@ -1337,6 +1996,41 @@ def ensure_smartech_extension_targets_in_podfile(podfile_path, is_flutter):
         content = content.rstrip() + extension_targets
 
     with open(podfile_path, 'w', encoding='utf-8') as f:
+        # Optionally ensure main target has required Smartech pods for Native iOS
+        if add_main_target_pods:
+            def add_pods_to_main_target(podfile_text: str) -> str:
+                # Match first non-extension target block
+                m = re.search(r"target\s+'([^']+)'\s+do(.*?)\nend", podfile_text, flags=re.DOTALL)
+                if not m:
+                    return podfile_text
+                target_name, block = m.group(1), m.group(2)
+                if target_name in ('SmartechNSE', 'SmartechNCE'):
+                    # Find next
+                    matches = list(re.finditer(r"target\s+'([^']+)'\s+do(.*?)\nend", podfile_text, flags=re.DOTALL))
+                    for mm in matches:
+                        if mm.group(1) not in ('SmartechNSE', 'SmartechNCE'):
+                            m = mm
+                            target_name, block = mm.group(1), mm.group(2)
+                            break
+                insert_lines = []
+                required_pods = ["pod 'Smartech-iOS-SDK'", "pod 'SmartPush-iOS-SDK'"]
+                if hansel_enabled:
+                    required_pods.append("pod 'SmartechNudges'")
+                for rp in required_pods:
+                    if rp not in block:
+                        insert_lines.append(f"  {rp}")
+                if not insert_lines:
+                    return podfile_text
+                # Insert after use_frameworks! if present, else at start of block
+                if 'use_frameworks!' in block:
+                    block = block.replace('use_frameworks!\n', 'use_frameworks!\n' + '\n'.join(insert_lines) + '\n')
+                else:
+                    block = '\n'.join(insert_lines) + '\n' + block.lstrip('\n')
+                start, end = m.span(2)
+                return podfile_text[:start] + block + podfile_text[end:]
+
+            content = add_pods_to_main_target(content)
+
         f.write(content)
     print("✅ SmartechNSE and SmartechNCE targets added to Podfile")
 
