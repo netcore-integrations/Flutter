@@ -43,6 +43,35 @@ EXCLUDE_DIRS = ['/build/', '/Pods/', '/DerivedData/', '/.git/', '/Carthage/', '/
 CURRENT_APP_TYPE = None  # 1: Native iOS, 2: Flutter, 3: React Native, 4: Cordova, 5: Ionic
 DEFAULT_INDENT = "    "
 
+# Optional: third-party Python packages your script may need. Use PyPI names.
+# Example: REQUIRED_PY_PACKAGES = ["ruamel.yaml", "packaging>=24.0"]
+REQUIRED_PY_PACKAGES = []
+
+def ensure_python_packages_installed(packages):
+    if not packages:
+        return
+    def try_import(pkg_spec: str) -> bool:
+        # pkg_spec may contain version pins; import the import-name (left of any symbols)
+        base = pkg_spec.split("[")[0].split("==")[0].split(">=")[0].split("<=")[0].replace("-", "_")
+        try:
+            __import__(base)
+            return True
+        except Exception:
+            return False
+    missing = [p for p in packages if not try_import(p)]
+    if not missing:
+        return
+    print(f"Installing missing Python packages: {', '.join(missing)}")
+    for pkg in missing:
+        try:
+            result = subprocess.run([sys.executable, "-m", "pip", "install", pkg])
+            if result.returncode != 0:
+                print(f"❌ Failed to install {pkg}. Please install it manually and re-run.")
+                sys.exit(1)
+        except FileNotFoundError:
+            print("❌ pip not found. Please ensure Python and pip are installed, then retry.")
+            sys.exit(1)
+
 # --- Markers ---
 SMARTECH_DID_FINISH_LAUNCHING_MARKER_START = "// SMARTECH_INIT_START"
 SMARTECH_DID_REGISTER_TOKEN_MARKER = "// SMARTECH_DID_REGISTER_TOKEN"
@@ -131,6 +160,38 @@ def find_info_plist(exclusions):
         found_path = valid_plists[0]
         print(f"Success: Found unique Info.plist at: {found_path}")
         return found_path
+
+def try_switch_to_project_root(exclusions):
+    """Improve robustness when running as a packaged binary where CWD may not be the project root.
+
+    Tries these candidate directories in order and switches CWD to the first that yields an Info.plist:
+      1) current working directory
+      2) directory of the executable (for packaged binaries)
+      3) parent of the executable directory
+    Returns True if it changed to a directory where Info.plist can be found, else False (CWD unchanged).
+    """
+    original_cwd = os.getcwd()
+    candidates = [
+        original_cwd,
+        os.path.dirname(getattr(sys, 'executable', original_cwd)),
+    ]
+    exe_dir = candidates[-1]
+    candidates.append(os.path.dirname(exe_dir) if exe_dir else original_cwd)
+    for cand in candidates:
+        try:
+            if not cand or not os.path.isdir(cand):
+                continue
+            os.chdir(cand)
+            if find_info_plist(exclusions):
+                if cand != original_cwd:
+                    print(f"Switched working directory to: {cand}")
+                return True
+        except Exception:
+            pass
+        finally:
+            # Always restore before trying next candidate
+            os.chdir(original_cwd)
+    return False
 
 def find_app_delegate_details(exclusions, search_root="."):
     print("\n--- Searching for App Entry Point (AppDelegate/SwiftUI App) ---")
@@ -231,6 +292,17 @@ def ask_config_location():
             return 'plist'
         if choice == '2':
             return 'app_delegate'
+        print("Invalid input. Please enter 1 or 2.")
+
+def ask_js_package_manager():
+    """Ask user which JS package manager to use for RN/Cordova/Ionic installs."""
+    print("\nWhich JavaScript package manager do you use?")
+    print("1. npm (default)")
+    print("2. yarn")
+    while True:
+        choice = input("Enter 1 or 2: ").strip()
+        if choice in ("", "1"): return "npm"
+        if choice == "2": return "yarn"
         print("Invalid input. Please enter 1 or 2.")
 
 def get_indentation(line_content):
@@ -1127,16 +1199,55 @@ def ensure_flutter_plugins_and_pub_get(project_root: str, hansel_enabled: bool):
         print("❌ Flutter not found. Please install Flutter and ensure it is on PATH.")
         sys.exit(1)
 
-def run_npm_installs_for_app_type(project_root: str, app_type: int, hansel_enabled: bool):
+def ensure_flutter_import_in_main(project_root: str):
+    """Ensure lib/main.dart imports smartech_base."""
+    lib_main = os.path.join(project_root, "lib", "main.dart")
+    try:
+        if not os.path.exists(lib_main):
+            print("ℹ️ lib/main.dart not found; skipping adding smartech_base import.")
+            return
+        with open(lib_main, 'r', encoding='utf-8') as f:
+            content = f.read()
+        import_line = "import 'package:smartech_base/smartech_base.dart';"
+        if import_line in content:
+            print("ℹ️ smartech_base import already present in lib/main.dart.")
+            return
+        # Insert after existing imports if any, otherwise at top
+        lines = content.splitlines()
+        insert_idx = 0
+        for i, l in enumerate(lines):
+            if l.strip().startswith('import '):
+                insert_idx = i + 1
+        lines.insert(insert_idx, import_line)
+        new_content = "\n".join(lines) + ("\n" if not lines or not lines[-1].endswith('\n') else "")
+        with open(lib_main, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        print("✅ Added smartech_base import to lib/main.dart.")
+        git_commit("chore: add smartech_base import to lib/main.dart", [lib_main])
+    except Exception as e:
+        print(f"❌ Failed to update lib/main.dart: {e}")
+
+def run_npm_installs_for_app_type(project_root: str, app_type: int, hansel_enabled: bool, pkg_manager: str = "npm"):
     commands = []
+    use_yarn = (pkg_manager == "yarn")
     if app_type == 3:
-        commands.append(["npm", "install", "smartech-base-react-native"])
-        commands.append(["npm", "install", "smartech-push-react-native"])
-        if hansel_enabled:
-            commands.append(["npm", "install", "--save", "smartech-reactnative-nudges"])
+        if use_yarn:
+            commands.append(["yarn", "add", "smartech-base-react-native"])
+            commands.append(["yarn", "add", "smartech-push-react-native"])
+            if hansel_enabled:
+                commands.append(["yarn", "add", "smartech-reactnative-nudges"])
+        else:
+            commands.append(["npm", "install", "smartech-base-react-native"])
+            commands.append(["npm", "install", "smartech-push-react-native"])
+            if hansel_enabled:
+                commands.append(["npm", "install", "--save", "smartech-reactnative-nudges"])
     elif app_type in (4, 5):
-        commands.append(["npm", "install", "smartech-base-cordova", "--save"])
-        commands.append(["npm", "install", "smartech-push-cordova", "--save"])
+        if use_yarn:
+            commands.append(["yarn", "add", "smartech-base-cordova"])
+            commands.append(["yarn", "add", "smartech-push-cordova"])
+        else:
+            commands.append(["npm", "install", "smartech-base-cordova", "--save"])
+            commands.append(["npm", "install", "smartech-push-cordova", "--save"])
         # Hansel not supported; no additional installs
 
     for cmd in commands:
@@ -1147,7 +1258,10 @@ def run_npm_installs_for_app_type(project_root: str, app_type: int, hansel_enabl
                 print(f"❌ Command failed: {' '.join(cmd)}")
                 sys.exit(1)
         except FileNotFoundError:
-            print("❌ npm not found. Please install Node.js and npm, then retry.")
+            if use_yarn:
+                print("❌ yarn not found. Please install Yarn or choose npm, then retry.")
+            else:
+                print("❌ npm not found. Please install Node.js and npm, then retry.")
             sys.exit(1)
     if commands:
         print("✅ JavaScript dependencies installed.")
@@ -1602,6 +1716,9 @@ def get_url_scheme_from_user():
 def main():
     print("Starting Smartech/Hansel project configuration script...")
     
+    # Ensure any declared third-party Python packages are present
+    ensure_python_packages_installed(REQUIRED_PY_PACKAGES)
+
     # Add this line near the start of main()
     check_ruby_gems()
     
@@ -1615,10 +1732,13 @@ def main():
 
         # Set ios_project_path based on app type
     if app_type == 1:  # Native iOS
+        # Try to stabilize CWD when running as packaged binary
+        try_switch_to_project_root(EXCLUDE_DIRS + ['/ios/'])
         ios_project_path = os.getcwd()
         search_root = "."
         current_exclusions = EXCLUDE_DIRS + ['/ios/']
     else:  # Flutter, React Native, Cordova, Ionic
+        try_switch_to_project_root(EXCLUDE_DIRS)
         ios_project_path = os.path.join(os.getcwd(), "ios")
         search_root = "ios"
         current_exclusions = EXCLUDE_DIRS
@@ -1627,8 +1747,9 @@ def main():
         # Flutter: ensure pubspec.yaml and required plugins, run pub get BEFORE pods
         ensure_flutter_plugins_and_pub_get(os.getcwd(), hansel_enabled=False)
     elif app_type in (3, 4, 5):
-        # React Native / Cordova / Ionic: install JavaScript deps BEFORE pods
-        run_npm_installs_for_app_type(os.getcwd(), app_type, hansel_enabled=False)
+        # React Native / Cordova / Ionic: ask npm vs yarn, then install JS deps BEFORE pods
+        pkg_manager = ask_js_package_manager()
+        run_npm_installs_for_app_type(os.getcwd(), app_type, hansel_enabled=False, pkg_manager=pkg_manager)
 
     plist_path = find_info_plist(current_exclusions)
     app_delegate_details_dict = find_app_delegate_details(current_exclusions, search_root)
@@ -1662,8 +1783,10 @@ def main():
     # With Hansel choice finalized, ensure per-platform package prerequisites
     if app_type == 2:
         ensure_flutter_plugins_and_pub_get(os.getcwd(), hansel_enabled=user_opted_for_hansel)
+        ensure_flutter_import_in_main(os.getcwd())
     elif app_type in (3, 4, 5):
-        run_npm_installs_for_app_type(os.getcwd(), app_type, hansel_enabled=user_opted_for_hansel)
+        pkg_manager = ask_js_package_manager()
+        run_npm_installs_for_app_type(os.getcwd(), app_type, hansel_enabled=user_opted_for_hansel, pkg_manager=pkg_manager)
 
     # Ask where to place config (plist vs app delegate)
     config_location = ask_config_location()
