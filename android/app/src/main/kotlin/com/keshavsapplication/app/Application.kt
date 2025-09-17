@@ -1,5 +1,6 @@
 package com.keshavsapplication.app
 
+import android.app.Application
 import android.util.Log
 import com.netcore.android.Smartech
 import com.netcore.android.smartechpush.SmartPush
@@ -11,7 +12,7 @@ import io.flutter.app.FlutterApplication
 import io.hansel.core.logger.HSLLogLevel
 import java.lang.ref.WeakReference
 
-class Application: FlutterApplication() {
+class Application: Application() {
     override fun onCreate() {
         super.onCreate()
 
@@ -21,6 +22,8 @@ class Application: FlutterApplication() {
         Smartech.getInstance(WeakReference(applicationContext)).setDebugLevel(9)
         // Add the below line to track app install and update by smartech
         Smartech.getInstance(WeakReference(applicationContext)).trackAppInstallUpdateBySmartech()
+
+        Smartech.getInstance(WeakReference(applicationContext)).getDeviceUniqueId()
 
         HSLLogLevel.all.setEnabled(true);
         HSLLogLevel.mid.setEnabled(true);

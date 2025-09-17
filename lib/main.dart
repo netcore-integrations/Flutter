@@ -94,9 +94,14 @@ void main() async {
       Map<dynamic, dynamic>? smtCustomPayload) async {
     // String deeplink1=smtDeeplink!;
     // print(deeplink1);
-    print(smtDeeplink);
-    print(smtCustomPayload!.entries.first.key);
-    print(smtCustomPayload!.entries.first.value);
+    print("smtDeeplink: "+smtDeeplink!);
+    final Map<String, dynamic> payload =
+    smtCustomPayload!.map((key, value) => MapEntry(key.toString(), value));
+
+    // Print all key-value pairs
+    payload.forEach((key, value) {
+      print("$key : $value");
+    });
 
     if (smtDeeplinkSource == 'PushNotification') {
       Future.delayed(const Duration(milliseconds: 2500), () async {

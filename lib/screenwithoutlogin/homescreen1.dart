@@ -152,6 +152,12 @@ class _HomeScreen1State extends State<HomeScreen1> {
 
   @override
   void initState() {
+    Future.delayed(const Duration(seconds: 1), () async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      bool? isLoggedIn = prefs.getBool("isLoggedIn");
+      print(isLoggedIn);
+      Smartech().trackEvent("home_page", {"login": isLoggedIn});
+    });
     home = getdashboard();
     category = getCategory();
     category!.then((value) {
@@ -228,12 +234,12 @@ class _HomeScreen1State extends State<HomeScreen1> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      bool? isLoggedIn = prefs.getBool("isLoggedIn");
-      print(isLoggedIn);
-      Smartech().trackEvent("home_page", {"login": isLoggedIn});
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+    //   SharedPreferences prefs = await SharedPreferences.getInstance();
+    //   bool? isLoggedIn = prefs.getBool("isLoggedIn");
+    //   print(isLoggedIn);
+    //   Smartech().trackEvent("home_page", {"login": isLoggedIn});
+    // });
     double baseWidth = 428;
     double fem = MediaQuery.of(context).size.width / baseWidth;
     double ffem = fem * 0.97;
