@@ -1199,33 +1199,52 @@ def ensure_flutter_plugins_and_pub_get(project_root: str, hansel_enabled: bool):
         print("❌ Flutter not found. Please install Flutter and ensure it is on PATH.")
         sys.exit(1)
 
-def ensure_flutter_import_in_main(project_root: str):
-    """Ensure lib/main.dart imports smartech_base."""
-    lib_main = os.path.join(project_root, "lib", "main.dart")
+def ensure_flutter_import_in_appdelegate(project_root: str):
+    """Ensure iOS AppDelegate imports smartech_base for Flutter projects."""
+    ios_path = os.path.join(project_root, "ios")
+    if not os.path.exists(ios_path):
+        print("ℹ️ ios/ directory not found; skipping smartech_base import.")
+        return
+    
+    # Find AppDelegate.swift or AppDelegate.m
+    appdelegate_swift = os.path.join(ios_path, "Runner", "AppDelegate.swift")
+    appdelegate_objc = os.path.join(ios_path, "Runner", "AppDelegate.m")
+    
+    appdelegate_path = None
+    if os.path.exists(appdelegate_swift):
+        appdelegate_path = appdelegate_swift
+    elif os.path.exists(appdelegate_objc):
+        appdelegate_path = appdelegate_objc
+    
+    if not appdelegate_path:
+        print("ℹ️ AppDelegate not found in ios/Runner/; skipping smartech_base import.")
+        return
+    
     try:
-        if not os.path.exists(lib_main):
-            print("ℹ️ lib/main.dart not found; skipping adding smartech_base import.")
-            return
-        with open(lib_main, 'r', encoding='utf-8') as f:
+        with open(appdelegate_path, 'r', encoding='utf-8') as f:
             content = f.read()
-        import_line = "import 'package:smartech_base/smartech_base.dart';"
+        
+        import_line = "#import <smartech_base/smartech_base.h>"
         if import_line in content:
-            print("ℹ️ smartech_base import already present in lib/main.dart.")
+            print("ℹ️ smartech_base import already present in AppDelegate.")
             return
-        # Insert after existing imports if any, otherwise at top
+        
+        # Insert after existing imports
         lines = content.splitlines()
         insert_idx = 0
         for i, l in enumerate(lines):
-            if l.strip().startswith('import '):
+            if l.strip().startswith('#import '):
                 insert_idx = i + 1
+        
         lines.insert(insert_idx, import_line)
         new_content = "\n".join(lines) + ("\n" if not lines or not lines[-1].endswith('\n') else "")
-        with open(lib_main, 'w', encoding='utf-8') as f:
+        
+        with open(appdelegate_path, 'w', encoding='utf-8') as f:
             f.write(new_content)
-        print("✅ Added smartech_base import to lib/main.dart.")
-        git_commit("chore: add smartech_base import to lib/main.dart", [lib_main])
+        print("✅ Added smartech_base import to AppDelegate.")
+        git_commit("chore: add smartech_base import to AppDelegate", [appdelegate_path])
     except Exception as e:
-        print(f"❌ Failed to update lib/main.dart: {e}")
+        print(f"❌ Failed to update AppDelegate: {e}")
 
 def run_npm_installs_for_app_type(project_root: str, app_type: int, hansel_enabled: bool, pkg_manager: str = "npm"):
     commands = []
@@ -1783,7 +1802,7 @@ def main():
     # With Hansel choice finalized, ensure per-platform package prerequisites
     if app_type == 2:
         ensure_flutter_plugins_and_pub_get(os.getcwd(), hansel_enabled=user_opted_for_hansel)
-        ensure_flutter_import_in_main(os.getcwd())
+        ensure_flutter_import_in_appdelegate(os.getcwd())
     elif app_type in (3, 4, 5):
         pkg_manager = ask_js_package_manager()
         run_npm_installs_for_app_type(os.getcwd(), app_type, hansel_enabled=user_opted_for_hansel, pkg_manager=pkg_manager)
