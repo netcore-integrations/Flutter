@@ -329,30 +329,98 @@ def find_class_definition_line(lines, language, class_name="AppDelegate"):
     return interface_idx if language == 'objc' and interface_idx != -1 else -1
 
 def find_method_bounds(lines, language, signature_patterns, start_search_line=0):
+    """
+    Find method bounds for a given pattern, handling both single-line and multi-line function signatures.
+    Returns (signature_line_idx, opening_brace_line_idx, closing_brace_line_idx)
+    """
     for i in range(start_search_line, len(lines)):
         current_line_content = lines[i]
         if current_line_content.strip().startswith("//"):
             continue
+        
+        # Check if this line matches any of the patterns
         for pattern in signature_patterns:
             if pattern.search(current_line_content):
-                signature_line_idx = i
-                opening_brace_line_idx = -1
-                brace_level = 0
-                for j in range(signature_line_idx, len(lines)):
-                    line_for_brace = lines[j]
-                    if '{' in line_for_brace:
-                        opening_brace_line_idx = j
-                        for k in range(opening_brace_line_idx, len(lines)):
-                            line_for_body = lines[k]
-                            clean_line_for_body = re.sub(r"//.*", "", line_for_body)
-                            brace_level += clean_line_for_body.count('{')
-                            brace_level -= clean_line_for_body.count('}')
-                            if brace_level == 0 and k >= opening_brace_line_idx:
-                                return signature_line_idx, opening_brace_line_idx, k
-                        return signature_line_idx, opening_brace_line_idx, -1
-                    elif j > signature_line_idx + 5:
-                        break
-                return signature_line_idx, -1, -1
+                return _find_function_bounds_from_line(lines, i)
+        
+        # For Swift, also check for multi-line function signatures
+        if language == 'swift' and current_line_content.strip().startswith('func'):
+            # Check if this could be the start of a multi-line function signature
+            # Look ahead to see if any of the next few lines contain method names we're looking for
+            method_name_keywords = ['didRegisterForRemoteNotificationsWithDeviceToken', 
+                                  'didFailToRegisterForRemoteNotificationsWithError',
+                                  'willPresent', 'didReceive', 'open']
+            
+            for j in range(i, min(i + 4, len(lines))):  # Look ahead up to 3 lines
+                next_line = lines[j]
+                for keyword in method_name_keywords:
+                    if keyword in next_line:
+                        # Found the method name on a subsequent line
+                        # This is a multi-line function signature
+                        return _find_function_bounds_from_line(lines, i)
+    return -1, -1, -1
+
+def _find_function_bounds_from_line(lines, signature_line_idx):
+    """
+    Helper function to find function bounds starting from a given line.
+    Returns (signature_line_idx, opening_brace_line_idx, closing_brace_line_idx)
+    """
+    opening_brace_line_idx = -1
+    brace_level = 0
+    
+    # Look ahead up to 5 lines to find the opening brace
+    for j in range(signature_line_idx, min(signature_line_idx + 6, len(lines))):
+        line_for_brace = lines[j]
+        if '{' in line_for_brace:
+            opening_brace_line_idx = j
+            # Now find the closing brace
+            for k in range(opening_brace_line_idx, len(lines)):
+                line_for_body = lines[k]
+                clean_line_for_body = re.sub(r"//.*", "", line_for_body)
+                brace_level += clean_line_for_body.count('{')
+                brace_level -= clean_line_for_body.count('}')
+                if brace_level == 0 and k >= opening_brace_line_idx:
+                    return signature_line_idx, opening_brace_line_idx, k
+            return signature_line_idx, opening_brace_line_idx, -1
+    return signature_line_idx, -1, -1
+
+def find_specific_method_bounds(lines, language, method_name, patterns):
+    """
+    Find method bounds for a specific method name, ensuring we get the right function.
+    This prevents inserting code into the wrong function.
+    """
+    # Define method-specific keywords to ensure we find the right function
+    # Each method needs unique, specific keywords to avoid false matches
+    method_keywords = {
+        'didFinishLaunchingWithOptions': ['didFinishLaunchingWithOptions'],
+        'didRegisterForRemoteNotificationsWithDeviceToken': ['didRegisterForRemoteNotificationsWithDeviceToken'],
+        'didFailToRegisterForRemoteNotificationsWithError': ['didFailToRegisterForRemoteNotificationsWithError'],
+        'willPresent': ['willPresent', 'UNNotification', 'UNNotificationPresentationOptions'],
+        'didReceive': ['didReceive', 'UNNotificationResponse', 'UNNotificationResponse'],
+        'openURL': ['open url:', 'OpenURLOptionsKey']
+    }
+    
+    target_keywords = method_keywords.get(method_name, [])
+    
+    for i in range(len(lines)):
+        current_line_content = lines[i]
+        if current_line_content.strip().startswith("//"):
+            continue
+        
+        # Check if this line starts with "func"
+        if language == 'swift' and current_line_content.strip().startswith('func'):
+            # Check if this line or subsequent lines contain the target keywords
+            found_keywords = []
+            for j in range(i, min(i + 4, len(lines))):  # Look ahead up to 3 lines
+                next_line = lines[j]
+                for keyword in target_keywords:
+                    if keyword in next_line:
+                        found_keywords.append(keyword)
+            
+            # If we found the right keywords, this is our target function
+            if found_keywords:
+                return _find_function_bounds_from_line(lines, i)
+    
     return -1, -1, -1
 
 def add_uncenterdelegate_if_needed(lines, language, class_name="AppDelegate"):
@@ -477,7 +545,9 @@ def add_or_update_method(lines, language, config):
     swift_stub = config.get('swift_stub', [])
     objc_stub = config.get('objc_stub', [])
     patterns = swift_patterns if language == 'swift' else objc_patterns
-    sig_idx, open_brace_idx, end_idx = find_method_bounds(lines, language, patterns)
+    
+    # Find the specific function we're looking for
+    sig_idx, open_brace_idx, end_idx = find_specific_method_bounds(lines, language, method_name, patterns)
 
     # If method exists
     if sig_idx != -1 and open_brace_idx != -1 and end_idx != -1:
@@ -553,6 +623,95 @@ def add_or_update_method(lines, language, config):
             return lines, True
     return lines, False
 
+def remove_duplicate_functions(lines, language):
+    """
+    Remove empty function stubs when there are already implemented versions of the same function.
+    This prevents duplicate function definitions.
+    """
+    if language != 'swift':
+        return lines
+    
+    print("      Checking for duplicate functions...")
+    
+    # Define function patterns to check for duplicates
+    function_patterns = [
+        {
+            'name': 'didRegisterForRemoteNotificationsWithDeviceToken',
+            'keywords': ['didRegisterForRemoteNotificationsWithDeviceToken']
+        },
+        {
+            'name': 'didFailToRegisterForRemoteNotificationsWithError', 
+            'keywords': ['didFailToRegisterForRemoteNotificationsWithError']
+        },
+        {
+            'name': 'willPresent',
+            'keywords': ['willPresent']
+        },
+        {
+            'name': 'didReceive',
+            'keywords': ['didReceive']
+        },
+        {
+            'name': 'openURL',
+            'keywords': ['open', 'url']
+        }
+    ]
+    
+    for func_info in function_patterns:
+        function_instances = []
+        
+        # Find all instances of this function by looking for the keywords
+        for i, line in enumerate(lines):
+            if line.strip().startswith('func'):
+                # Check if this line or subsequent lines contain the keywords
+                found_keywords = []
+                for j in range(i, min(i + 4, len(lines))):  # Look ahead up to 3 lines
+                    next_line = lines[j]
+                    for keyword in func_info['keywords']:
+                        if keyword in next_line:
+                            found_keywords.append(keyword)
+                
+                if found_keywords:
+                    # This is a function we're looking for
+                    sig_idx, open_brace_idx, end_idx = find_method_bounds(lines, language, [re.compile(r'.*')], i)
+                    if sig_idx != -1 and open_brace_idx != -1 and end_idx != -1:
+                        # Get the function body
+                        function_body = ''.join(lines[open_brace_idx+1:end_idx]).strip()
+                        function_instances.append({
+                            'start': sig_idx,
+                            'end': end_idx,
+                            'body': function_body,
+                            'is_empty': function_body == '' or function_body == '}' or function_body == 'completionHandler([.alert, .badge, .sound])' or function_body == 'completionHandler()'
+                        })
+        
+        # If we have multiple instances, remove empty ones
+        if len(function_instances) > 1:
+            print(f"      Found {len(function_instances)} instances of {func_info['name']}")
+            # Sort by start position (keep the first one, remove later empty ones)
+            function_instances.sort(key=lambda x: x['start'])
+            
+            # Remove empty function stubs (but keep at least one)
+            removed_count = 0
+            for instance in function_instances[1:]:  # Skip the first one
+                if instance['is_empty']:
+                    # Remove this empty function
+                    start_idx = instance['start']
+                    end_idx = instance['end']
+                    
+                    # Also remove any empty lines before the function
+                    while start_idx > 0 and lines[start_idx - 1].strip() == '':
+                        start_idx -= 1
+                    
+                    # Remove the function
+                    del lines[start_idx:end_idx + 1]
+                    removed_count += 1
+                    print(f"      Removed duplicate empty function: {func_info['name']}")
+            
+            if removed_count > 0:
+                print(f"      Cleaned up {removed_count} duplicate empty function(s) for {func_info['name']}")
+    
+    return lines
+
 def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, use_override=False, is_native_ios=False, app_type=1, config_in_app_delegate=False, config_values=None):
     print(f"\n--- Modifying AppDelegate: {app_delegate_file_path} ({language}) ---")
     print("🚨 IMPORTANT: Review changes carefully after the script finishes! 🚨")
@@ -579,12 +738,19 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
         # Ensure required imports
         lines, _ = ensure_imports(lines, language, hansel_enabled=add_hansel_code_flag, is_react_native=(app_type == 3 and language == 'objc'))
 
-        # Ensure protocol conformances: SmartechDelegate, UNUserNotificationCenterDelegate (swift), and optional Hansel
-        required_protocols = ["SmartechDelegate"]
-        if language == 'swift':
-            required_protocols.append("UNUserNotificationCenterDelegate")
-        if add_hansel_code_flag:
-            required_protocols.extend(["HanselDeepLinkListener", "HanselEventsListener"])
+        # Ensure protocol conformances: SmartechDelegate for all platforms, others only for Native iOS
+        required_protocols = ["SmartechDelegate"]  # Always add SmartechDelegate
+        
+        # Add platform-specific protocols only for Native iOS
+        if app_type == 1:  # Native iOS only
+            if language == 'swift':
+                required_protocols.append("UNUserNotificationCenterDelegate")
+            if add_hansel_code_flag:
+                required_protocols.extend(["HanselDeepLinkListener", "HanselEventsListener"])
+            print(f"   Adding all protocols for Native iOS: {', '.join(required_protocols)}")
+        else:
+            print(f"   Adding only SmartechDelegate for non-native iOS platform (app_type={app_type})")
+        
         lines, _ = add_protocols_if_needed(lines, language, required_protocols)
 
         methods_to_process = [
@@ -600,8 +766,8 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
             ],
             'code': {
                 'swift': [
-                    "HanselTracker.registerListener(self)" if add_hansel_code_flag else None,
-                    "Hansel.registerHanselDeeplinkListener(listener: self)" if add_hansel_code_flag else None,
+                    "HanselTracker.registerListener(self)" if (add_hansel_code_flag and is_native_ios) else None,
+                    "Hansel.registerHanselDeeplinkListener(listener: self)" if (add_hansel_code_flag and is_native_ios) else None,
                     "Hansel.enableDebugLogs() // TODO: Disable debug logs for production" if add_hansel_code_flag else None,
                     "Smartech.sharedInstance().setDebugLevel(.verbose) // TODO: Set appropriate debug level",
                     "Smartech.sharedInstance().trackAppInstallUpdateBySmartech()",
@@ -625,7 +791,8 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
             'name': 'didRegisterForRemoteNotificationsWithDeviceToken',
             'swift_patterns': [
                 r"(?:override\s+)?func\s+application\s*\(\s*_?\s*application:\s*UIApplication\s*,\s*didRegisterForRemoteNotificationsWithDeviceToken\s*deviceToken:\s*Data\s*\)",
-                r"(?:override\s+)?func\s+application\s*\(\s*.*didRegisterForRemoteNotificationsWithDeviceToken.*"
+                r"(?:override\s+)?func\s+application\s*\(\s*.*didRegisterForRemoteNotificationsWithDeviceToken.*",
+                r"func\s+application.*didRegisterForRemoteNotificationsWithDeviceToken"
             ],
             'objc_patterns': [
                 r"-\s*\(.*didRegisterForRemoteNotificationsWithDeviceToken\s*:\s*NSData"
@@ -644,7 +811,8 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
             'name': 'didFailToRegisterForRemoteNotificationsWithError',
             'swift_patterns': [
                 r"(?:override\s+)?func\s+application\s*\(\s*_?\s*application:\s*UIApplication\s*,\s*didFailToRegisterForRemoteNotificationsWithError\s*error:\s*Error\s*\)",
-                r"(?:override\s+)?func\s+application\s*\(\s*.*didFailToRegisterForRemoteNotificationsWithError.*"
+                r"(?:override\s+)?func\s+application\s*\(\s*.*didFailToRegisterForRemoteNotificationsWithError.*",
+                r"func\s+application.*didFailToRegisterForRemoteNotificationsWithError"
             ],
             'objc_patterns': [
                 r"-\s*\(.*didFailToRegisterForRemoteNotificationsWithError\s*:\s*NSError"
@@ -665,7 +833,8 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
             'name': 'willPresent',
             'swift_patterns': [
                 r"(?:override\s+)?func\s+userNotificationCenter\s*\(\s*_?\s*center:\s*UNUserNotificationCenter\s*,\s*willPresent\s*notification:\s*UNNotification.*",
-                r"func\s+userNotificationCenter\s*\(.*willPresent.*"
+                r"func\s+userNotificationCenter\s*\(.*willPresent.*",
+                r"func\s+userNotificationCenter.*willPresent"
             ],
             'objc_patterns': [],
             'code': {'swift': [
@@ -681,7 +850,8 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
             'name': 'didReceive',
             'swift_patterns': [
                 r"(?:override\s+)?func\s+userNotificationCenter\s*\(\s*_?\s*center:\s*UNUserNotificationCenter\s*,\s*didReceive\s*response:\s*UNNotificationResponse.*",
-                r"func\s+userNotificationCenter\s*\(.*didReceive.*"
+                r"func\s+userNotificationCenter\s*\(.*didReceive.*",
+                r"func\s+userNotificationCenter.*didReceive"
             ],
             'objc_patterns': [],
             'code': {'swift': [
@@ -697,7 +867,8 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
             'name': 'openURL',
             'swift_patterns': [
                 r"(?:override\s+)?func\s+application\s*\(\s*_?\s*app:\s*UIApplication\s*,\s*open\s+url:\s*URL.*",
-                r"func\s+application\s*\(.*open\s+url:.*"
+                r"func\s+application\s*\(.*open\s+url:.*",
+                r"func\s+application.*open.*url"
             ],
             'objc_patterns': [],
             'code': {'swift': [
@@ -717,6 +888,9 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
             'objc_stub': []
         },
     ]
+        # Clean up duplicate functions first
+        lines = remove_duplicate_functions(lines, language)
+        
         # Add or update methods
         for method_config in methods_to_process:
             lines, modified = add_or_update_method(lines, language, method_config)
@@ -844,8 +1018,8 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
                 if objc_stub:
                     lines = lines[:insert_idx] + [l + "\n" for l in objc_stub] + lines[insert_idx:]
                     print("Added ObjC handleDeeplinkAction method.")
-        # Native iOS only: add Swift helper methods for Hansel events and deeplink listener
-        if language == 'swift':
+        # Native iOS with Hansel only: add Swift helper methods for Hansel events and deeplink listener
+        if language == 'swift' and is_native_ios and add_hansel_code_flag:
             class_end = len(lines) - 1
             for i in range(len(lines) - 1, -1, -1):
                 if lines[i].strip() == "}":
@@ -866,6 +1040,7 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
                     "}",
                 ]
                 lines = lines[:class_end] + [f"{DEFAULT_INDENT}{l}\n" for l in helper_stub] + lines[class_end:]
+                print("Added Hansel helper methods for native iOS.")
 
         # Write back
         with open(app_delegate_file_path, 'w', encoding='utf-8') as file:
@@ -876,14 +1051,735 @@ def modify_app_delegate(app_delegate_file_path, language, add_hansel_code_flag, 
         print(f"Error modifying AppDelegate: {e}")
         return False
 
+def detect_existing_extensions(ios_project_path):
+    """
+    Detect existing notification service extensions in the project.
+    Only checks for service extensions (content extensions can be multiple).
+    Returns a dictionary with information about found service extension.
+    """
+    print("\n--- Detecting Existing Service Extensions ---")
+    
+    extensions_info = {
+        'service_extension': None,
+        'content_extension': None  # Keep for compatibility but won't be used
+    }
+    
+    # Search for existing notification service extensions only
+    service_extensions = []
+    
+    # Look for NotificationService.swift files
+    for root, dirs, files in os.walk(ios_project_path):
+        for file in files:
+            if file == "NotificationService.swift":
+                service_extensions.append({
+                    'path': os.path.join(root, file),
+                    'directory': root,
+                    'name': os.path.basename(root)
+                })
+    
+    # Check for existing service extension targets in Xcode project
+    xcodeproj_files = glob.glob(os.path.join(ios_project_path, "*.xcodeproj"))
+    if xcodeproj_files:
+        xcodeproj_path = xcodeproj_files[0]
+        try:
+            with open(os.path.join(xcodeproj_path, "project.pbxproj"), 'r') as f:
+                project_content = f.read()
+                
+            # Look for existing service extension targets only
+            import re
+            target_matches = re.findall(r'PBXNativeTarget.*?name = ([^;]+);.*?productType = "com\.apple\.product-type\.app-extension"', project_content, re.DOTALL)
+            
+            for target_name in target_matches:
+                target_name = target_name.strip()
+                # Only check for service extensions (not content extensions)
+                if 'service' in target_name.lower() or 'notification' in target_name.lower():
+                    if not any(ext['name'] == target_name for ext in service_extensions):
+                        service_extensions.append({
+                            'path': None,
+                            'directory': None,
+                            'name': target_name,
+                            'target_only': True
+                        })
+        except Exception as e:
+            print(f"⚠️  Could not read Xcode project file: {e}")
+    
+    # Set the first found service extension as the one to modify
+    if service_extensions:
+        extensions_info['service_extension'] = service_extensions[0]
+        print(f"✅ Found existing service extension: {service_extensions[0]['name']}")
+        if service_extensions[0]['path']:
+            print(f"   Path: {service_extensions[0]['path']}")
+        else:
+            print(f"   Target only: {service_extensions[0]['name']}")
+    else:
+        print("ℹ️  No existing service extension found. Will create new SmartechNSE extension.")
+    
+    return extensions_info
+
+def apply_smartech_notification_service_modification(service_extension_info, smartech_app_group, smartech_app_id):
+    """
+    Apply Smartech-specific modifications to existing NotificationService.swift and Info.plist.
+    
+    Args:
+        service_extension_info: Dictionary with extension information
+        smartech_app_group: Smartech app group identifier
+        smartech_app_id: Smartech app ID
+    """
+    if not service_extension_info or not service_extension_info['path']:
+        print("⚠️  No existing NotificationService.swift file found to modify.")
+        return False
+    
+    service_file_path = service_extension_info['path']
+    extension_dir = service_extension_info['directory']
+    
+    print(f"\n--- Applying Smartech NotificationService.swift Modification ---")
+    print(f"File: {service_file_path}")
+    
+    try:
+        # Create backup of NotificationService.swift
+        with open(service_file_path, 'r') as f:
+            original_content = f.read()
+        
+        backup_path = service_file_path + '.backup'
+        with open(backup_path, 'w') as f:
+            f.write(original_content)
+        print(f"✅ Created backup: {backup_path}")
+        
+        # Apply Smartech modifications
+        modified_content = modify_notification_service_with_smartech(original_content)
+        
+        with open(service_file_path, 'w') as f:
+            f.write(modified_content)
+        
+        print("✅ Successfully applied Smartech modifications to NotificationService.swift")
+        
+        # Apply Info.plist updates
+        info_plist_path = os.path.join(extension_dir, "Info.plist")
+        if os.path.exists(info_plist_path):
+            apply_smartech_info_plist_updates(info_plist_path, smartech_app_group, smartech_app_id)
+        else:
+            print(f"⚠️  Info.plist not found at: {info_plist_path}")
+        
+        # Add App Group capability to existing service extension
+        add_app_group_capability_to_existing_extension(service_extension_info, smartech_app_group)
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error applying Smartech NotificationService.swift modification: {e}")
+        return False
+
+def modify_notification_service_with_smartech(original_content):
+    """
+    Modify NotificationService.swift content to integrate Smartech functionality.
+    
+    Args:
+        original_content: Original Swift file content
+        
+    Returns:
+        Modified Swift file content with Smartech integration
+    """
+    import re
+    
+    # Check if already modified with boolean tracking
+    if 'SmartPush' in original_content and 'smartechServiceExtension' in original_content and 'isPNfromSmartech' in original_content:
+        print("ℹ️  Smartech code with boolean tracking already present in NotificationService.swift")
+        return original_content
+    
+    lines = original_content.split('\n')
+    modified_lines = []
+    
+    # Track modifications
+    smartpush_import_added = False
+    smartech_variable_added = False
+    did_receive_modified = False
+    service_extension_time_modified = False
+    
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        
+        # Add SmartPush import after UserNotifications import
+        if 'import UserNotifications' in line and not smartpush_import_added:
+            modified_lines.append(line)
+            modified_lines.append('import SmartPush')
+            print("✅ Added SmartPush import")
+            smartpush_import_added = True
+            i += 1
+            continue
+        
+        # Add smartechServiceExtension variable and isPNfromSmartech boolean after class declaration
+        if 'class NotificationService' in line and not smartech_variable_added:
+            modified_lines.append(line)
+            modified_lines.append('')
+            modified_lines.append('  let smartechServiceExtension = SMTNotificationServiceExtension()')
+            modified_lines.append('  var isPNfromSmartech: Bool = false')
+            modified_lines.append('')
+            print("✅ Added smartechServiceExtension variable and isPNfromSmartech boolean")
+            smartech_variable_added = True
+            i += 1
+            continue
+        
+        # Modify didReceive method
+        if 'func didReceive' in line and not did_receive_modified:
+            # Find the complete method
+            method_start = i
+            brace_count = 0
+            method_end = -1
+            found_opening_brace = False
+            
+            # Find method end by counting braces
+            for j in range(i, len(lines)):
+                current_line = lines[j]
+                if '{' in current_line:
+                    found_opening_brace = True
+                    brace_count += current_line.count('{')
+                if '}' in current_line:
+                    brace_count -= current_line.count('}')
+                if found_opening_brace and brace_count == 0:
+                    method_end = j
+                    break
+            
+            if method_end != -1:
+                # Extract method signature and existing body
+                method_signature = lines[method_start]
+                
+                # Find the opening brace and extract existing code
+                opening_brace_line = -1
+                for k in range(method_start, method_end + 1):
+                    if '{' in lines[k]:
+                        opening_brace_line = k
+                        break
+                
+                if opening_brace_line != -1:
+                    # Extract existing code inside the method
+                    existing_code_lines = lines[opening_brace_line + 1:method_end]
+                    
+                    # Create modified method
+                    modified_lines.append(method_signature)
+                    modified_lines.append('    if SmartPush.sharedInstance().isNotification(fromSmartech:request.content.userInfo){')
+                    modified_lines.append('      isPNfromSmartech = true')
+                    modified_lines.append('      smartechServiceExtension.didReceive(request, withContentHandler: contentHandler)')
+                    modified_lines.append('    } else {')
+                    modified_lines.append('      isPNfromSmartech = false')
+                    
+                    # Add existing code with proper indentation
+                    for code_line in existing_code_lines:
+                        if code_line.strip():  # Skip empty lines
+                            modified_lines.append('    ' + code_line)
+                    
+                    modified_lines.append('    }')
+                    modified_lines.append('  }')
+                    
+                    print("✅ Modified didReceive method with Smartech integration")
+                    did_receive_modified = True
+                    i = method_end + 1
+                    continue
+        
+        # Modify serviceExtensionTimeWillExpire method
+        if 'func serviceExtensionTimeWillExpire' in line and not service_extension_time_modified:
+            # Find the complete method
+            method_start = i
+            brace_count = 0
+            method_end = -1
+            found_opening_brace = False
+            
+            # Find method end by counting braces
+            for j in range(i, len(lines)):
+                current_line = lines[j]
+                if '{' in current_line:
+                    found_opening_brace = True
+                    brace_count += current_line.count('{')
+                if '}' in current_line:
+                    brace_count -= current_line.count('}')
+                if found_opening_brace and brace_count == 0:
+                    method_end = j
+                    break
+            
+            if method_end != -1:
+                # Extract method signature and existing body
+                method_signature = lines[method_start]
+                
+                # Find the opening brace and extract existing code
+                opening_brace_line = -1
+                for k in range(method_start, method_end + 1):
+                    if '{' in lines[k]:
+                        opening_brace_line = k
+                        break
+                
+                if opening_brace_line != -1:
+                    # Extract existing code inside the method
+                    existing_code_lines = lines[opening_brace_line + 1:method_end]
+                    
+                    # Create modified method
+                    modified_lines.append(method_signature)
+                    modified_lines.append('    if isPNfromSmartech == true {')
+                    modified_lines.append('      smartechServiceExtension.serviceExtensionTimeWillExpire()')
+                    modified_lines.append('    } else {')
+                    
+                    # Add existing code with proper indentation
+                    for code_line in existing_code_lines:
+                        if code_line.strip():  # Skip empty lines
+                            modified_lines.append('    ' + code_line)
+                    
+                    modified_lines.append('    }')
+                    modified_lines.append('  }')
+                    
+                    print("✅ Modified serviceExtensionTimeWillExpire method with Smartech call")
+                    service_extension_time_modified = True
+                    i = method_end + 1
+                    continue
+        
+        # Add the line as-is if no modifications needed
+        modified_lines.append(line)
+        i += 1
+    
+    return '\n'.join(modified_lines)
+
+def apply_smartech_info_plist_updates(info_plist_path, smartech_app_group, smartech_app_id):
+    """
+    Apply Smartech-specific updates to extension Info.plist.
+    
+    Args:
+        info_plist_path: Path to the Info.plist file
+        smartech_app_group: Smartech app group identifier
+        smartech_app_id: Smartech app ID
+    """
+    print(f"\n--- Applying Smartech Info.plist Updates ---")
+    print(f"File: {info_plist_path}")
+    
+    try:
+        import plistlib
+        
+        # Read existing plist
+        with open(info_plist_path, 'rb') as f:
+            plist_data = plistlib.load(f)
+        
+        # Create backup
+        backup_path = info_plist_path + '.backup'
+        with open(backup_path, 'wb') as f:
+            plistlib.dump(plist_data, f)
+        print(f"✅ Created backup: {backup_path}")
+        
+        # Create SmartechKeys dictionary
+        smartech_keys = {
+            "SmartechAppGroup": smartech_app_group,
+            "SmartechAppId": smartech_app_id
+        }
+        
+        # Add or update SmartechKeys
+        plist_data["SmartechKeys"] = smartech_keys
+        
+        print(f"✅ Added SmartechKeys dictionary:")
+        print(f"   SmartechAppGroup: {smartech_app_group}")
+        print(f"   SmartechAppId: {smartech_app_id}")
+        
+        # Write the updated plist
+        with open(info_plist_path, 'wb') as f:
+            plistlib.dump(plist_data, f)
+        
+        print("✅ Successfully updated Info.plist with SmartechKeys")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error applying Smartech Info.plist updates: {e}")
+        return False
+
+def add_app_group_capability_to_existing_extension(service_extension_info, smartech_app_group):
+    """
+    Add App Group capability to existing service extension.
+    
+    Args:
+        service_extension_info: Dictionary with extension information
+        smartech_app_group: Smartech app group identifier
+    """
+    if not service_extension_info:
+        print("⚠️  No service extension info provided")
+        return False
+    
+    extension_name = service_extension_info.get('name')
+    if not extension_name:
+        print("⚠️  No extension name found")
+        return False
+    
+    print(f"\n--- Adding App Group Capability to Existing Extension ---")
+    print(f"Extension: {extension_name}")
+    print(f"App Group: {smartech_app_group}")
+    
+    try:
+        # Find the Xcode project file
+        ios_project_path = os.path.dirname(service_extension_info.get('path', ''))
+        while ios_project_path and not ios_project_path.endswith('ios'):
+            ios_project_path = os.path.dirname(ios_project_path)
+        
+        if not ios_project_path:
+            # Fallback: search from current directory
+            ios_project_path = os.getcwd()
+        
+        xcodeproj_files = glob.glob(os.path.join(ios_project_path, "*.xcodeproj"))
+        if not xcodeproj_files:
+            print(f"⚠️  No .xcodeproj file found in {ios_project_path}")
+            return False
+        
+        xcodeproj_path = xcodeproj_files[0]
+        print(f"Found Xcode project: {xcodeproj_path}")
+        
+        # Use Ruby script to add App Group capability
+        ruby_script_path = os.path.join(os.path.dirname(__file__), "add_app_group_capability.rb")
+        write_add_app_group_capability_ruby_script(ruby_script_path, extension_name, smartech_app_group)
+        
+        # Execute Ruby script
+        result = subprocess.run([
+            "ruby", ruby_script_path, xcodeproj_path, extension_name, smartech_app_group
+        ], capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            print("✅ Successfully added App Group capability to existing extension")
+            print(f"Ruby script output: {result.stdout}")
+            return True
+        else:
+            print(f"❌ Failed to add App Group capability: {result.stderr}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error adding App Group capability: {e}")
+        return False
+
+def write_add_app_group_capability_ruby_script(script_path, extension_name, app_group_id):
+    """
+    Write Ruby script to add App Group capability to existing extension.
+    """
+    ruby_code = f"""
+require 'xcodeproj'
+
+# Get command line arguments
+xcodeproj_path = ARGV[0]
+target_name = ARGV[1]
+app_group_id = ARGV[2]
+
+puts "Adding App Group capability to target: #{target_name}"
+puts "App Group ID: #{app_group_id}"
+
+# Open the project
+project = Xcodeproj::Project.open(xcodeproj_path)
+
+# Find the target
+target = project.targets.find {{ |t| t.name == target_name }}
+unless target
+    puts "❌ Target '#{{target_name}}' not found"
+    exit 1
+end
+
+puts "✅ Found target: #{{target.name}}"
+
+# Get or create entitlements file
+entitlements_file = target.build_configurations.first.build_settings['CODE_SIGN_ENTITLEMENTS']
+entitlements_path = nil
+
+if entitlements_file
+    entitlements_path = File.join(File.dirname(xcodeproj_path), entitlements_file)
+    puts "Using existing entitlements file: #{{entitlements_path}}"
+else
+    # Create new entitlements file
+    entitlements_filename = "#{{target_name}}.entitlements"
+    entitlements_path = File.join(File.dirname(xcodeproj_path), entitlements_filename)
+    
+    # Create entitlements content
+    entitlements_content = <<~XML
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>com.apple.security.application-groups</key>
+            <array>
+                <string>#{{app_group_id}}</string>
+            </array>
+        </dict>
+        </plist>
+    XML
+    
+    File.write(entitlements_path, entitlements_content)
+    puts "✅ Created entitlements file: #{{entitlements_path}}"
+    
+    # Add entitlements file to project
+    entitlements_group = project.main_group.find_subpath(target_name, true)
+    entitlements_group.set_source_tree('<group>')
+    entitlements_group.set_path(target_name)
+    
+    entitlements_ref = entitlements_group.new_file(entitlements_filename)
+    puts "✅ Added entitlements file to project"
+end
+
+# Update build settings to use entitlements file
+relative_entitlements_path = File.join(target_name, File.basename(entitlements_path))
+target.build_configurations.each do |config|
+    config.build_settings['CODE_SIGN_ENTITLEMENTS'] = relative_entitlements_path
+end
+
+puts "✅ Updated build settings with entitlements file"
+
+# Save the project
+project.save
+puts "✅ Successfully added App Group capability to #{{target_name}}"
+"""
+    
+    with open(script_path, "w") as f:
+        f.write(ruby_code)
+
+def apply_custom_notification_service_modification(service_extension_info, notification_service_code, info_plist_updates):
+    """
+    Apply custom modification code to existing NotificationService.swift and Info.plist.
+    
+    Args:
+        service_extension_info: Dictionary with extension information
+        notification_service_code: Custom Swift code for NotificationService.swift
+        info_plist_updates: Dictionary with Info.plist key-value pairs to add/update
+    """
+    if not service_extension_info or not service_extension_info['path']:
+        print("⚠️  No existing NotificationService.swift file found to modify.")
+        return False
+    
+    service_file_path = service_extension_info['path']
+    extension_dir = service_extension_info['directory']
+    
+    print(f"\n--- Applying Custom NotificationService.swift Modification ---")
+    print(f"File: {service_file_path}")
+    
+    try:
+        # Create backup of NotificationService.swift
+        with open(service_file_path, 'r') as f:
+            original_content = f.read()
+        
+        backup_path = service_file_path + '.backup'
+        with open(backup_path, 'w') as f:
+            f.write(original_content)
+        print(f"✅ Created backup: {backup_path}")
+        
+        # Apply custom code
+        with open(service_file_path, 'w') as f:
+            f.write(notification_service_code)
+        
+        print("✅ Successfully applied custom NotificationService.swift code")
+        
+        # Apply Info.plist updates if provided
+        if info_plist_updates:
+            info_plist_path = os.path.join(extension_dir, "Info.plist")
+            if os.path.exists(info_plist_path):
+                apply_custom_info_plist_updates(info_plist_path, info_plist_updates)
+            else:
+                print(f"⚠️  Info.plist not found at: {info_plist_path}")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error applying custom NotificationService.swift modification: {e}")
+        return False
+
+def apply_custom_info_plist_updates(info_plist_path, updates):
+    """
+    Apply custom updates to extension Info.plist.
+    
+    Args:
+        info_plist_path: Path to the Info.plist file
+        updates: Dictionary with key-value pairs to add/update
+    """
+    print(f"\n--- Applying Custom Info.plist Updates ---")
+    print(f"File: {info_plist_path}")
+    
+    try:
+        import plistlib
+        
+        # Read existing plist
+        with open(info_plist_path, 'rb') as f:
+            plist_data = plistlib.load(f)
+        
+        # Create backup
+        backup_path = info_plist_path + '.backup'
+        with open(backup_path, 'wb') as f:
+            plistlib.dump(plist_data, f)
+        print(f"✅ Created backup: {backup_path}")
+        
+        # Apply updates
+        updated = False
+        for key, value in updates.items():
+            if key not in plist_data or plist_data[key] != value:
+                plist_data[key] = value
+                updated = True
+                print(f"✅ Updated {key}: {value}")
+        
+        if updated:
+            # Write the updated plist
+            with open(info_plist_path, 'wb') as f:
+                plistlib.dump(plist_data, f)
+            print("✅ Successfully updated Info.plist with custom values")
+        else:
+            print("ℹ️  No Info.plist updates needed")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error applying custom Info.plist updates: {e}")
+        return False
+
+def modify_existing_notification_service(service_extension_info, smartech_app_group, smartech_app_id):
+    """
+    Modify existing NotificationService.swift file with Smartech code.
+    This is the default Smartech modification - use apply_custom_notification_service_modification for custom code.
+    """
+    if not service_extension_info or not service_extension_info['path']:
+        print("⚠️  No existing NotificationService.swift file found to modify.")
+        return False
+    
+    service_file_path = service_extension_info['path']
+    extension_dir = service_extension_info['directory']
+    
+    print(f"\n--- Modifying Existing NotificationService.swift ---")
+    print(f"File: {service_file_path}")
+    
+    try:
+        # Read the existing file
+        with open(service_file_path, 'r') as f:
+            content = f.read()
+        
+        # Check if Smartech code is already present
+        if 'SmartPush' in content and 'SMTNotificationServiceExtension' in content:
+            print("ℹ️  Smartech code already present in NotificationService.swift")
+            return True
+        
+        # Create backup
+        backup_path = service_file_path + '.backup'
+        with open(backup_path, 'w') as f:
+            f.write(content)
+        print(f"✅ Created backup: {backup_path}")
+        
+        # Modify the content to include Smartech code
+        smartech_code = f"""import UserNotifications
+import SmartPush
+
+class NotificationService: UNNotificationServiceExtension {{
+  
+  let smartechServiceExtension = SMTNotificationServiceExtension()
+  
+  override func didReceive(_ request: UNNotificationRequest, withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {{
+    if SmartPush.sharedInstance().isNotification(fromSmartech:request.content.userInfo){{
+      smartechServiceExtension.didReceive(request, withContentHandler: contentHandler)
+    }} else {{
+      contentHandler(request.content)
+    }}
+  }}
+  
+  override func serviceExtensionTimeWillExpire() {{
+    smartechServiceExtension.serviceExtensionTimeWillExpire()
+  }}
+}}
+"""
+        
+        # Write the modified content
+        with open(service_file_path, 'w') as f:
+            f.write(smartech_code)
+        
+        print("✅ Successfully modified NotificationService.swift with Smartech code")
+        
+        # Also update the Info.plist if it exists
+        info_plist_path = os.path.join(extension_dir, "Info.plist")
+        if os.path.exists(info_plist_path):
+            modify_extension_info_plist(info_plist_path, smartech_app_group, smartech_app_id)
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error modifying NotificationService.swift: {e}")
+        return False
+
+def modify_extension_info_plist(info_plist_path, smartech_app_group, smartech_app_id):
+    """
+    Modify existing extension Info.plist with Smartech keys.
+    """
+    print(f"\n--- Modifying Extension Info.plist ---")
+    print(f"File: {info_plist_path}")
+    
+    try:
+        import plistlib
+        
+        # Read existing plist
+        with open(info_plist_path, 'rb') as f:
+            plist_data = plistlib.load(f)
+        
+        # Create backup
+        backup_path = info_plist_path + '.backup'
+        with open(backup_path, 'wb') as f:
+            plistlib.dump(plist_data, f)
+        print(f"✅ Created backup: {backup_path}")
+        
+        # Add Smartech keys if not already present
+        updated = False
+        
+        if 'SmartechAppGroup' not in plist_data:
+            plist_data['SmartechAppGroup'] = smartech_app_group
+            updated = True
+            print("✅ Added SmartechAppGroup key")
+        
+        if 'SmartechAppId' not in plist_data:
+            plist_data['SmartechAppId'] = smartech_app_id
+            updated = True
+            print("✅ Added SmartechAppId key")
+        
+        if updated:
+            # Write the updated plist
+            with open(info_plist_path, 'wb') as f:
+                plistlib.dump(plist_data, f)
+            print("✅ Successfully updated Info.plist with Smartech keys")
+        else:
+            print("ℹ️  Smartech keys already present in Info.plist")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error modifying Info.plist: {e}")
+        return False
+
 #
 # ==============================================================================
 # == STEP 1: Replace this entire function in your smart_genie.py file ==
 # ==============================================================================
 #
 def create_smartech_extensions(smartech_app_group, smartech_app_id, ios_project_path):
-    print("\n--- Creating Smartech Extension Files ---")
+    print("\n--- Creating/Modifying Smartech Extension Files ---")
     
+    # First, detect existing service extension only (content extensions can be multiple)
+    extensions_info = detect_existing_extensions(ios_project_path)
+    
+    # Check if existing service extension found - only 1 service extension allowed
+    if extensions_info['service_extension']:
+        print(f"\n--- Found Existing Service Extension ---")
+        print(f"Extension: {extensions_info['service_extension']['name']}")
+        print("ℹ️  Service extension already exists. Applying Smartech modifications...")
+        
+        # Apply Smartech modifications to existing service extension
+        success = apply_smartech_notification_service_modification(
+            extensions_info['service_extension'], 
+            smartech_app_group, 
+            smartech_app_id
+        )
+        
+        if success:
+            print("✅ Successfully modified existing service extension with Smartech integration")
+        else:
+            print("⚠️  Failed to modify existing service extension, will create new one")
+            extensions_info['service_extension'] = None
+    else:
+        print("ℹ️  No existing service extension found. Will create new SmartechNSE extension.")
+    
+    # Always create new content extensions (multiple allowed)
+    print("\n--- Creating New SmartechNCE Content Extension ---")
+    _create_new_smartech_extensions(smartech_app_group, smartech_app_id, ios_project_path)
+    
+    return None
+
+def _create_new_smartech_extensions(smartech_app_group, smartech_app_id, ios_project_path):
+    """
+    Create new SmartechNSE and SmartechNCE extensions (original logic).
+    """
     # Determine versions from main app Info.plist (fallback to 1.0 / 1)
     main_info_plist = os.path.join(ios_project_path, "Runner", "Info.plist")
     marketing_version = "1.0"
